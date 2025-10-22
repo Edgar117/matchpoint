@@ -1,0 +1,130 @@
+{
+  "AppName": "COT-CODE-BUILDER",
+  "Resources": {
+    "Parents": [
+      {
+        "ResourceName": "HomeController",
+        "Description": "Home",
+        "Type": "IDM.Web.Filters.Mvc.AuthorizeController",
+        "Childrens": [
+          {
+            "ResourceName": "Estadísticas DB",
+            "Description": "Estadísticas DB",
+            "ActionType": "READ",
+            "Type": "IDM.Web.Filters.Mvc.AuthorizeAction",
+            "ActionButton": "",
+            "IsScreen": true,
+            "Screen": {
+              "ScreenName": "Estadísticas DB",
+              "Icon": "mdi-database-search",
+              "Tooltip": "Nueva Vista",
+              "Order": 6,
+              "ActionURL": "statistics/screens/Statistics",
+              "ParentScreen": "",
+              "ParentIcon": "",
+              "ParentOrder": 0
+            }
+          },
+          {
+            "ResourceName": "Conexion de base de datos",
+            "Description": "Conexion de base de datos",
+            "ActionType": "READ",
+            "Type": "IDM.Web.Filters.Mvc.AuthorizeAction",
+            "ActionButton": "",
+            "IsScreen": true,
+            "Screen": {
+              "ScreenName": "Conexiones DB",
+              "Icon": "mdi-database-plus",
+              "Tooltip": "Nueva Vista",
+              "Order": 5,
+              "ActionURL": "connections/screens/connections",
+              "ParentScreen": "",
+              "ParentIcon": "",
+              "ParentOrder": 0
+            }
+          },
+          {
+            "ResourceName": "Diccionario de datos",
+            "Description": "Diccionario de datos",
+            "ActionType": "READ",
+            "Type": "IDM.Web.Filters.Mvc.AuthorizeAction",
+            "ActionButton": "",
+            "IsScreen": true,
+            "Screen": {
+              "ScreenName": "Diccionario de datos",
+              "Icon": "mdi-book-alphabet",
+              "Tooltip": "Nueva Vista",
+              "Order": 4,
+              "ActionURL": "dictionary/screens/Dictionary",
+              "ParentScreen": "",
+              "ParentIcon": "",
+              "ParentOrder": 0
+            }
+          },
+          {
+            "ResourceName": "btnConexiones",
+            "Description": "Acción hacia conexiones",
+            "ActionType": "READ",
+            "Type": "IDM.Web.Filters.Mvc.AuthorizeAction",
+            "ActionButton": "btnConexiones",
+            "IsScreen": false
+          },
+          {
+            "ResourceName": "Generador",
+            "Description": "Generador",
+            "ActionType": "READ",
+            "Type": "IDM.Web.Filters.Mvc.AuthorizeAction",
+            "ActionButton": "",
+            "IsScreen": true,
+            "Screen": {
+              "ScreenName": "Generador",
+              "Icon": "mdi mdi-cog-sync",
+              "Tooltip": "Generador",
+              "Order": 3,
+              "ActionURL": "generator/screens/Generator",
+              "ParentScreen": "",
+              "ParentIcon": "",
+              "ParentOrder": 0
+            }
+          },
+          {
+            "ResourceName": "Inicio",
+            "Description": "Inicio",
+            "ActionType": "READ",
+            "Type": "IDM.Web.Filters.Mvc.AuthorizeAction",
+            "ActionButton": "",
+            "IsScreen": true,
+            "Screen": {
+              "ScreenName": "Inicio",
+              "Icon": "mdi mdi-home-circle",
+              "Tooltip": "Inicio",
+              "Order": 1,
+              "ActionURL": "dashboard/screens/HomeScreen",
+              "ParentScreen": "",
+              "ParentIcon": "",
+              "ParentOrder": 0
+            }
+          },
+          {
+            "ResourceName": "Indicadores",
+            "Description": "Indicadores",
+            "ActionType": "READ",
+            "Type": "IDM.Web.Filters.Mvc.AuthorizeAction",
+            "ActionButton": "",
+            "IsScreen": true,
+            "Screen": {
+              "ScreenName": "Indicadores",
+              "Icon": "mdi mdi-finance",
+              "Tooltip": "Indicadores",
+              "Order": 2,
+              "ActionURL": "graph/screens/Graph",
+              "ParentScreen": "",
+              "ParentIcon": "",
+              "ParentOrder": 0
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

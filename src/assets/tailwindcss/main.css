@@ -1,0 +1,50 @@
+@import './fonts.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.shadow-utility {
+    box-shadow: 0 1px 3px 0 rgb(60 64 67 / 30%), 0 4px 8px 3px rgb(60 64 67 / 15%);
+}
+
+/* width */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+    display: none;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+    display: none;
+}
+
+
+/* Track */
+#menu:hover ::-webkit-scrollbar-track:hover {
+    background: transparent;
+    border-radius: 10px;
+    display: block !important;
+}
+
+/* Handle */
+#menu:hover ::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+    display: block !important;
+}
+
+
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

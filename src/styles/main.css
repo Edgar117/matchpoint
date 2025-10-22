@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+    font-family: 'product-sans';
+    font-weight: 300;
+    src: url('../assets/fonts/ProductSans-Light.woff') format('woff');
+}
+
+@font-face {
+    font-family: 'product-sans';
+    font-weight: 400;
+    src: url('../assets/fonts/ProductSans-Regular.woff') format('woff');
+}
+
+
+@font-face {
+    font-family: 'product-sans';
+    font-weight: 500;
+    src: url('../assets/fonts/ProductSans-Medium.woff') format('woff');
+}
+
+@font-face {
+    font-family: 'product-sans';
+    font-weight: 600;
+    src: url('../assets/fonts/ProductSans-Bold.woff') format('woff');
+}
+
+@font-face {
+    font-family: 'product-sans';
+    font-weight: 700;
+    src: url('../assets/fonts/ProductSans-Bold.woff') format('woff');
+}
+
+* {
+    font-family: 'product-sans', sans-serif;
+    text-transform: none !important;
+}
+
+
+.v-navigation-drawer__content::-webkit-scrollbar {
+    width: 15px;
+}
+.v-navigation-drawer__content::-webkit-scrollbar-thumb {
+    background-color: #2C3441;
+}
+.v-navigation-drawer__content::-webkit-scrollbar-track-piece {
+    background-color: #111827;
+}
+
+.v-data-table__td,
+.v-data-table__th {
+    border-top-width: 4px;
+    border-bottom-width: 4px;
+    border-color: #f1f5f9;
+    font-size: 14px;
+}
+
+
+
+.v-table--density-compact > .v-table__wrapper > table > tbody > tr > th, .v-table--density-compact > .v-table__wrapper > table > thead > tr > th, .v-table--density-compact > .v-table__wrapper > table > tfoot > tr > th {
+    color: white !important;
+}
+
+/* .v-data-table-footer {
+    display: none !important;
+    font-size: 12px;
+} */
+
+.v-table--density-compact>.v-table__wrapper>table>tbody>tr>th,
+.v-table--density-compact>.v-table__wrapper>table>thead>tr>th,
+.v-table--density-compact>.v-table__wrapper>table>tfoot>tr>th {
+    background: #001c33 !important;
+}
+

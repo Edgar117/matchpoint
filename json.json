@@ -1,0 +1,19 @@
+[
+  {
+    "icon": "",
+    "title": "",
+    "tooltip": "",
+    "order": 1,
+    "path":"",
+    "hasChild":true,
+    "child": [
+      {
+        "icon": "",
+        "title": "",
+        "tooltip": "",
+        "order": 1,
+        "path":""
+      }
+    ],
+  }
+]
