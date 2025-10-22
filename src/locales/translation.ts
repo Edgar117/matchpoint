@@ -6,7 +6,7 @@ export const message = {
                 search: "Search...",
                 showFilter: "Show filters",
                 hideFilter: "Hide filters",
-                loadingInfo: "Loading information..."
+                loadingInfo: "Loading information...",
             },
             dialogMessage: {
                 NEW: {
@@ -35,6 +35,12 @@ export const message = {
                 accept: "Accept",
                 close: "Close",
             },
+            FileUpload: {
+                DefaultMessage: "Drag a file here or click to select",
+                SupportFiles: "Supports images, PDFs and documents",
+                Show: "Preview",
+                Hide: "Hide",
+            },
         },
     },
     es: {
@@ -44,7 +50,7 @@ export const message = {
                 search: "Search...",
                 showFilter: "Show filters",
                 hideFilter: "Hide filters",
-                loadingInfo: "Loading information..."
+                loadingInfo: "Loading information...",
             },
             dialogMessage: {
                 NEW: {
@@ -72,6 +78,13 @@ export const message = {
                 cancel: "Cancelar",
                 accept: "Aceptar",
                 close: "Cerrar",
+            },
+            FileUpload: {
+                DefaultMessage:
+                    " Arrastra un archivo aquí o haz clic para seleccionar",
+                SupportFiles: "Soporta imágenes, PDFs y documentos",
+                Show: "Previsualizar",
+                Hide: "Ocultar",
             },
         },
     },

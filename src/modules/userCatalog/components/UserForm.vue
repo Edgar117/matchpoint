@@ -352,7 +352,7 @@
 </template>
 <script lang="ts" setup>
 import { useUser } from "../composables/useUser";
-import { usePrivateCompany } from "../../empresa/composables/usePrivateCompany";
+import { usePrivateCompany } from "../../empresa/composables/useEmpresa";
 import { Field, useForm } from "vee-validate";
 import { onMounted, ref } from "vue";
 import { banksItem } from "@/interfaces/User";

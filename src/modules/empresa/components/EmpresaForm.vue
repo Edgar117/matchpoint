@@ -211,10 +211,12 @@
                     counter="50"
                 ></v-text-field>
             </Field>
-            <v-switch
-                v-model="fields.esPublico"
-                label="¿Es Publico?"
-            ></v-switch>
+            <CFileUploader
+                titulo="Cargar Logo"
+                :acceptedFormats="'image/*'"
+                @file-uploaded="handleFileUpload"
+                :valor-inicial="archivoLoaded"
+            ></CFileUploader>
         </div>
         <!-- <template v-slot:actions> -->
         <div class="flex justify-end mr-1 py-2 gap-2">
@@ -231,11 +233,11 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { usePrivateCompany } from "../composables/usePrivateCompany";
+import { useEmpresa } from "../composables/useEmpresa";
 import { Field, useForm } from "vee-validate";
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 
-import { CButton } from "@core/index";
+import { CButton, CFileUploader } from "@core/index";
 
 const { meta } = useForm();
 
@@ -248,6 +250,20 @@ const props = withDefaults(defineProps<IProps>(), {
     closeModal: () => {},
 });
 
+const handleFileUpload = (fileData: any) => {
+    fields.value.logo = fileData?.base64?.split(",")[1];
+};
+
+const archivoLoaded = ref<{ base64?: string; name?: string; type?: string }>(
+    {}
+);
+
 const { fields, typePaymentAccountList, handleSave, selectTypePrivateCompany } =
     usePrivateCompany();
+
+onMounted(() => {
+    if (fields.value.empresaId) {
+        console.log("value");
+    }
+});
 </script>

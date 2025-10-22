@@ -8,7 +8,7 @@ import {
 } from "@/interfaces/PrivateCompany";
 const { user } = storeToRefs(useLoginStore());
 
-import { useConnectionService } from "./usePrivateCompanyService";
+import { useConnectionService } from "./useEmpresaService";
 import { useConnectionStore } from "../store/state";
 import { SortItem } from "@/interfaces/DataTables";
 import { decryptString } from "../../../helpers/cryptoJS";
@@ -21,7 +21,7 @@ const {
     selectTypePrivateCompany,
 } = useConnectionService();
 
-export const usePrivateCompany = () => {
+export const useEmpresa = () => {
     //Importacion de state
     const {
         showBottom,
@@ -185,12 +185,6 @@ export const usePrivateCompany = () => {
     //Computed
     const headers = computed(() => {
         return [
-            // {
-            //     title: "#",
-            //     key: "nombreAplicacion",
-            //     sortable: !showFilter.value,
-            //     width: "150px",
-            // },
             {
                 title: "Empresa",
                 key: "empresa",
@@ -218,8 +212,8 @@ export const usePrivateCompany = () => {
                 sortable: !showFilter.value,
             },
             {
-                title: "¿Es Publico ?",
-                key: "esPublico",
+                title: "logo",
+                key: "logo",
                 sortable: !showFilter.value,
             },
             {

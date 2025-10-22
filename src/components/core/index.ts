@@ -11,3 +11,4 @@ export { default as CCustomFilter } from "./CCustomPagination/CCustomFilter.vue"
 export { default as CCustomFilterButton } from "./CCustomPagination/CCustomFilterButton.vue";
 export { default as CGenerationAction } from "./CGenerationAction/CGenerationAction.vue";
 export { default as CTree } from "./CTree/CTree.vue";
+export { default as CFileUploader } from "./CFileUploader/CFileUploader.vue";

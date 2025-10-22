@@ -2,7 +2,7 @@ import { ref } from "vue";
 import { defineStore } from "pinia";
 import { PrivateCompany, TypePaymentAccount } from "@/interfaces/PrivateCompany";
 
-export const useConnectionStore = defineStore("company", () => {
+export const useConnectionStore = defineStore("empresa", () => {
     const privateCompanyList = ref<PrivateCompany[]>([]);
     const typePaymentAccountList = ref<TypePaymentAccount[]>([]);
     const UserConnectionSelected = ref<number[]>([]);

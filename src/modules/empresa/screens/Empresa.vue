@@ -122,7 +122,7 @@
             :persistent="true"
             :limit-size="false"
         >
-            <PrivateCompanyForm :close-modal="closeModal"></PrivateCompanyForm>
+            <EmpresaForm :close-modal="closeModal"></EmpresaForm>
         </CBottomSheet>
         <!-- END CUSTOM -->
         <CConfirmationDialog
@@ -154,7 +154,7 @@
 <script setup lang="ts">
 //COT-UI-LIB
 import { CBottomSheet, CButton, CConfirmationDialog } from "@core/index";
-import { usePrivateCompany } from "../composables/usePrivateCompany";
+import { useEmpresa } from "../composables/useEmpresa";
 //Controles core
 import {
     CCustomPagination,
@@ -163,7 +163,7 @@ import {
 } from "@core/index";
 
 //Form
-import PrivateCompanyForm from "../components/PrivateCompanyForm.vue";
+import EmpresaForm from "../components/EmpresaForm.vue";
 
 const {
     search,
@@ -187,6 +187,6 @@ const {
     loadingGrid,
     showFilterAction,
     showBottomAsignacion,
-} = usePrivateCompany();
+} = useEmpresa();
 </script>
 ../composables/usePrivateCompant
