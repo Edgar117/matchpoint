@@ -226,7 +226,7 @@
                 :disabled="!meta.valid"
                 @click="handleSave(fields)"
             >
-                Save
+                Guardar
             </CButton>
         </div>
         <!-- </template> -->
@@ -252,18 +252,37 @@ const props = withDefaults(defineProps<IProps>(), {
 
 const handleFileUpload = (fileData: any) => {
     fields.value.logo = fileData?.base64?.split(",")[1];
+    fields.value.extensionImg = fileData?.name.split(".")[1];
 };
 
 const archivoLoaded = ref<{ base64?: string; name?: string; type?: string }>(
     {}
 );
 
-const { fields, typePaymentAccountList, handleSave, selectTypePrivateCompany } =
-    usePrivateCompany();
+const { fields, typePaymentAccountList, handleSave, selImagenEmpresa } =
+    useEmpresa();
 
-onMounted(() => {
+onMounted(async () => {
     if (fields.value.empresaId) {
-        console.log("value");
+        // vamos a buscar la imagen
+        const baseImagen = await selImagenEmpresa(
+            fields.value.empresaId,
+            fields.value.logo
+        );
+        archivoLoaded.value = baseImagen
+            ? {
+                  base64: `${baseImagen}`,
+                  name: "Logo.jpg",
+                  type: "image/jpg",
+              }
+            : {};
+
+        fields.value.logo =
+            typeof baseImagen === "string" && baseImagen !== null
+                ? baseImagen.split(",")[1]
+                : "";
+
+        fields.value.extensionImg = "Logo.jpg";
     }
 });
 </script>

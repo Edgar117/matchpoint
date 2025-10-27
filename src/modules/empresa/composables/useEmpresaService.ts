@@ -80,7 +80,7 @@ export const useConnectionService = () => {
     const deleteConnection = async (connectionId: number) => {
         try {
             const response = await axios.delete(
-                `${URLS.COTBUILDER}/api/PrivateCompany/${connectionId}`
+                `${URLS.COTBUILDER}/api/Empresa/${connectionId}`
             );
 
             if (response.status === 200) {
@@ -152,13 +152,15 @@ export const useConnectionService = () => {
         }
     };
 
-    const selCompanyRequest = async () => {
+    const selImagenEmpresa = async (EmpresaId: number, Logo: string) => {
         try {
-            const { data } = await axios.get<{
-                data: PrivateCompany[];
-                totalCount: number;
-            }>(`${URLS.COTBUILDER}/api/Empresa`);
-            privateCompanyList.value = data.data;
+            const { data } = await axios.get(
+                `${URLS.COTBUILDER}/api/Empresa/logo/${EmpresaId}/${Logo}`,
+                { responseType: "blob" }
+            );
+            const base64 = await blobToBase64(data);
+            // console.log(base64);
+            return base64;
         } catch (error) {
             handleShowSnackbar({
                 text: `Something went wrong, contact the system administrator`,
@@ -169,12 +171,22 @@ export const useConnectionService = () => {
         }
     };
 
+    // Función auxiliar para convertir Blob a Base64
+    const blobToBase64 = (blob: Blob): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    };
+
     return {
         createCompany,
         selectPrivateCompany,
         updatePrivateCompany,
         deleteConnection,
         selectTypePrivateCompany,
-        selCompanyRequest,
+        selImagenEmpresa,
     };
 };

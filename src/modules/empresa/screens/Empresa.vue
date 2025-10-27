@@ -53,7 +53,10 @@
             >
                 <template
                     v-for="(header, i) in headers.filter(
-                        (item) => item.key !== 'action' && showFilter
+                        (item) =>
+                            item.key !== 'action' &&
+                            item.key !== 'logo' &&
+                            showFilter
                     )"
                     v-slot:[`header.${header.key}`]
                     :key="i"
@@ -65,7 +68,6 @@
                         :sortBy="sortBy"
                     />
                 </template>
-
                 <template v-slot:[`item.action`]="{ item }">
                     <div class="flex gap-1">
                         <CGenerationAction
@@ -88,6 +90,16 @@
                     </div>
                 </template>
 
+                <template v-slot:[`item.logo`]="{ item }">
+                    <div class="flex gap-1">
+                        <img
+                            width="50"
+                            height="50"
+                            :src="`${URLS.COTBUILDER}/api/Empresa/logo/${item.empresaId}/${item.logo}`"
+                        />
+                    </div>
+                </template>
+
                 <template v-slot:[`header.action`]>
                     <v-btn @click="showFilterAction" icon>
                         <v-icon color="white">{{
@@ -99,7 +111,9 @@
                             activator="parent"
                             location="bottom"
                             :text="
-                                !showFilter ? 'Mostrar Filtros' : 'Ocultar Filtros'
+                                !showFilter
+                                    ? 'Mostrar Filtros'
+                                    : 'Ocultar Filtros'
                             "
                         />
                     </v-btn>
@@ -162,6 +176,8 @@ import {
     CCustomFilter,
 } from "@core/index";
 
+import { URLS } from "@/helpers/constants";
+
 //Form
 import EmpresaForm from "../components/EmpresaForm.vue";
 
@@ -189,4 +205,3 @@ const {
     showBottomAsignacion,
 } = useEmpresa();
 </script>
-../composables/usePrivateCompant

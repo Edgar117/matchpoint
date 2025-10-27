@@ -55,7 +55,7 @@
                             v-bind="props"
                             density="compact"
                             v-model="pageValue"
-                            label="Page"
+                            label="Página"
                             @input="handleInput"
                             auto-select-first
                             :items="

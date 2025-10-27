@@ -18,7 +18,6 @@ export interface PrivateCompany {
     colonia: string;
     logo: string;
     extensionImg: string;
-    esPublico: boolean;
 }
 
 export interface PrivateCompanynRequestParams extends PrivateCompany {

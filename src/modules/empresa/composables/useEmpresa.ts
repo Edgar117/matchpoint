@@ -11,7 +11,6 @@ const { user } = storeToRefs(useLoginStore());
 import { useConnectionService } from "./useEmpresaService";
 import { useConnectionStore } from "../store/state";
 import { SortItem } from "@/interfaces/DataTables";
-import { decryptString } from "../../../helpers/cryptoJS";
 import { getLocation } from "@/helpers/tools";
 const {
     createCompany,
@@ -19,6 +18,7 @@ const {
     deleteConnection,
     selectPrivateCompany,
     selectTypePrivateCompany,
+    selImagenEmpresa,
 } = useConnectionService();
 
 export const useEmpresa = () => {
@@ -92,7 +92,6 @@ export const useEmpresa = () => {
             email: item.email,
             empresa: item.empresa,
             empresaId: item.empresaId,
-            esPublico: item.esPublico,
             estado: item.estado,
             extensionImg: item.extensionImg,
             logo: item.logo,
@@ -116,7 +115,6 @@ export const useEmpresa = () => {
             email: "",
             empresa: "",
             empresaId: 0,
-            esPublico: false,
             estado: "",
             extensionImg: "",
             logo: "",
@@ -151,7 +149,6 @@ export const useEmpresa = () => {
             direccion: "",
             email: "",
             empresa: "",
-            esPublico: false,
             estado: "",
             extensionImg: "",
             logo: "",
@@ -212,9 +209,9 @@ export const useEmpresa = () => {
                 sortable: !showFilter.value,
             },
             {
-                title: "logo",
+                title: "Logo",
                 key: "logo",
-                sortable: !showFilter.value,
+                sortable: false,
             },
             {
                 title: "",
@@ -286,5 +283,6 @@ export const useEmpresa = () => {
         closeModalAsignaciones,
         selectTypePrivateCompany,
         createCompany,
+        selImagenEmpresa,
     };
 };

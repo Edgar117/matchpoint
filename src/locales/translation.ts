@@ -46,7 +46,7 @@ export const message = {
     es: {
         generales: {
             paginacion: {
-                paginacionDescripcion: "{0} - {1} of {2} rows",
+                paginacionDescripcion: "{0} - {1} of {2} registros",
                 search: "Search...",
                 showFilter: "Show filters",
                 hideFilter: "Hide filters",

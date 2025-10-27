@@ -8,13 +8,13 @@ defineRule("email", email);
 
 configure({
     generateMessage: localize({
-        es: {
+        en: {
             messages: {
                 required: "Este campo es requerido",
                 max: "El texto debe tener {0} caracteres o menos",
             },
         },
-        en: {
+        es: {
             messages: {
                 required: "This field is required",
                 max: "The text must be {0} characters or less",
