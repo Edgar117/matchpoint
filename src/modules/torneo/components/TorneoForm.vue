@@ -156,7 +156,7 @@ onMounted(async () => {
     if (fields.value.empresaId) {
         // vamos a buscar la imagen
         const baseImagen = await selImagenTorneo(
-            fields.value.empresaId,
+            fields.value.torneoId,
             fields.value.logo
         );
         archivoLoaded.value = baseImagen

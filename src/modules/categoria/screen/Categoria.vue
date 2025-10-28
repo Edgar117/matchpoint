@@ -3,7 +3,7 @@
         <!-- {{ action }} -->
         <v-breadcrumbs
             class="!p-0 !py-2"
-            :items="['Catalogs', 'Users']"
+            :items="['Catalogos', 'Categoria']"
         ></v-breadcrumbs>
         <CCustomPagination
             v-model:page="page"
@@ -36,7 +36,7 @@
                     <v-tooltip
                         activator="parent"
                         location="bottom"
-                        text="Add new"
+                        text="Agregar Nuevo"
                     />
                 </v-btn>
             </template>
@@ -45,7 +45,7 @@
             <v-data-table
                 :items-per-page="elementPerPage"
                 :headers="headers"
-                :items="userList"
+                :items="categoriaList"
                 :search="search"
                 item-value="name"
                 :loading="loadingGrid"
@@ -53,7 +53,9 @@
             >
                 <template
                     v-for="(header, i) in headers.filter(
-                        (item) => item.key !== 'action' && showFilter
+                        (item:any) =>
+                            item.key !== 'action' &&
+                            showFilter
                     )"
                     v-slot:[`header.${header.key}`]
                     :key="i"
@@ -65,17 +67,6 @@
                         :sortBy="sortBy"
                     />
                 </template>
-
-                <template v-slot:[`item.roleDescription`]="{ item }">
-                    <div class="flex gap-1">
-                        {{
-                            item.roles.length <= 0
-                                ? "No role"
-                                : item.roles?.map((role) => role.rol).join(", ")
-                        }}
-                    </div>
-                </template>
-
                 <template v-slot:[`item.action`]="{ item }">
                     <div class="flex gap-1">
                         <CGenerationAction
@@ -84,16 +75,26 @@
                                     color: 'primaryBlue',
                                     handleAction: () => handleShowEdit(item),
                                     icon: 'mdi-pencil-outline',
-                                    label: 'Edit User',
+                                    label: 'Editar Categoria',
                                 },
                                 {
                                     color: 'red',
                                     handleAction: () =>
                                         handleShowDeleteDialog(item),
                                     icon: 'mdi-delete-outline',
-                                    label: 'Delete User',
+                                    label: 'Eliminar Categoria',
                                 },
                             ]"
+                        />
+                    </div>
+                </template>
+
+                <template v-slot:[`item.logo`]="{ item }">
+                    <div class="flex gap-1">
+                        <img
+                            width="50"
+                            height="50"
+                            :src="`${URLS.COTBUILDER}/api/Categoria/logo/${item.categoriaId}/${item.logo}`"
                         />
                     </div>
                 </template>
@@ -109,7 +110,9 @@
                             activator="parent"
                             location="bottom"
                             :text="
-                                !showFilter ? 'Show filters' : 'Hide filters'
+                                !showFilter
+                                    ? 'Mostrar Filtros'
+                                    : 'Ocultar Filtros'
                             "
                         />
                     </v-btn>
@@ -126,23 +129,18 @@
         <!-- bottomsheet -->
         <CBottomSheet
             :isLoading="saving"
-            :title="action === 'NEW' ? 'NEW USER' : 'EDIT USER'"
+            title="Categoria"
             textLoading="Loading...."
             v-model="showBottom"
             :persistent="true"
-            :limit-size="false"
+            :limit-size="true"
         >
-            <PrivateCompanyForm :close-modal="closeModal"></PrivateCompanyForm>
+            <CategoriaForm :close-modal="closeModal"></CategoriaForm>
         </CBottomSheet>
         <!-- END CUSTOM -->
         <CConfirmationDialog
             :title="dialogMessage.DELETE.title"
-            :description="
-                dialogMessage.DELETE.subtitle.replace(
-                    '#username',
-                    fields.username
-                )
-            "
+            :description="dialogMessage.DELETE.subtitle"
             v-model="showConfirmationDialog"
             size="lg"
         >
@@ -169,7 +167,7 @@
 <script setup lang="ts">
 //COT-UI-LIB
 import { CBottomSheet, CButton, CConfirmationDialog } from "@core/index";
-import { useUser } from "../composables/useUser";
+import { useCategoria } from "../composables/useCategoria";
 //Controles core
 import {
     CCustomPagination,
@@ -177,9 +175,10 @@ import {
     CCustomFilter,
 } from "@core/index";
 
+import { URLS } from "@/helpers/constants";
+
 //Form
-import PrivateCompanyForm from "../components/UserForm.vue";
-import { onMounted, onUnmounted } from "vue";
+import CategoriaForm from "../components/CategoriaForm.vue";
 
 const {
     search,
@@ -188,28 +187,20 @@ const {
     page,
     showBottom,
     saving,
-    userList,
-    fields,
+    closeModal,
+    categoriaList,
     showFilter,
     sortBy,
     headers,
+    handleShowEdit,
+    resetFields,
+    handleShowDeleteDialog,
     dialogMessage,
     action,
     showConfirmationDialog,
     fieldsFilter,
     loadingGrid,
     showFilterAction,
-    closeModal,
-    handleShowEdit,
-    resetFields,
-    handleShowDeleteDialog,
-    FirstLoad,
-} = useUser();
-
-onMounted(async () => {
-    await FirstLoad();
-});
-onUnmounted(() => {
-    action.value = "INIT";
-});
+    showBottomAsignacion,
+} = useCategoria();
 </script>

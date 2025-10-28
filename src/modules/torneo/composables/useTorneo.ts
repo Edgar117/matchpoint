@@ -153,6 +153,13 @@ export const useTorneo = () => {
     //Computed
     const headers = computed(() => {
         return [
+            
+            {
+                title: "Empresa ",
+                key: "empresa",
+                sortable: !showFilter.value,
+                width: "250px",
+            },
             {
                 title: "Clave ",
                 key: "clave",
