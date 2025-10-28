@@ -89,16 +89,6 @@
                     </div>
                 </template>
 
-                <template v-slot:[`item.logo`]="{ item }">
-                    <div class="flex gap-1">
-                        <img
-                            width="50"
-                            height="50"
-                            :src="`${URLS.COTBUILDER}/api/Categoria/logo/${item.categoriaId}/${item.logo}`"
-                        />
-                    </div>
-                </template>
-
                 <template v-slot:[`header.action`]>
                     <v-btn @click="showFilterAction" icon>
                         <v-icon color="white">{{
@@ -201,6 +191,5 @@ const {
     fieldsFilter,
     loadingGrid,
     showFilterAction,
-    showBottomAsignacion,
 } = useCategoria();
 </script>
