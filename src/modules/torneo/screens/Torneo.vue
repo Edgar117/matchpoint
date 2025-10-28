@@ -3,7 +3,7 @@
         <!-- {{ action }} -->
         <v-breadcrumbs
             class="!p-0 !py-2"
-            :items="['Catalogos', 'Empresa']"
+            :items="['Catalogos', 'Torneo']"
         ></v-breadcrumbs>
         <CCustomPagination
             v-model:page="page"
@@ -45,7 +45,7 @@
             <v-data-table
                 :items-per-page="elementPerPage"
                 :headers="headers"
-                :items="empresaList"
+                :items="torneoList"
                 :search="search"
                 item-value="name"
                 :loading="loadingGrid"
@@ -76,14 +76,14 @@
                                     color: 'primaryBlue',
                                     handleAction: () => handleShowEdit(item),
                                     icon: 'mdi-pencil-outline',
-                                    label: 'Editar Empresa',
+                                    label: 'Editar Torneo',
                                 },
                                 {
                                     color: 'red',
                                     handleAction: () =>
                                         handleShowDeleteDialog(item),
                                     icon: 'mdi-delete-outline',
-                                    label: 'Eliminar Empresa',
+                                    label: 'Eliminar Torneo',
                                 },
                             ]"
                         />
@@ -95,8 +95,28 @@
                         <img
                             width="50"
                             height="50"
-                            :src="`${URLS.COTBUILDER}/api/Empresa/logo/${item.empresaId}/${item.logo}`"
+                            :src="`${URLS.COTBUILDER}/api/Torneo/logo/${item.torneoId}/${item.logo}`"
                         />
+                    </div>
+                </template>
+
+                <template v-slot:[`item.esPublico`]="{ item }">
+                    <div class="flex gap-1">
+                        <v-icon
+                            :icon="item.esPublico ? 'mdi-earth' : 'mdi-lock'"
+                        />
+                    </div>
+                </template>
+
+                <template v-slot:[`item.fechaInicio`]="{ item }">
+                    <div class="flex gap-1">
+                      {{ item.fechaInicio ? new Date(item.fechaInicio).toISOString().split("T")[0] : 'Sin fecha Inicio' }}
+                    </div>
+                </template>
+
+                <template v-slot:[`item.fechaFin`]="{ item }">
+                    <div class="flex gap-1">
+                        {{ item.fechaFin ? new Date(item.fechaFin).toISOString().split("T")[0] : 'Sin fecha Fin' }}
                     </div>
                 </template>
 
@@ -130,13 +150,13 @@
         <!-- bottomsheet -->
         <CBottomSheet
             :isLoading="saving"
-            title="Empresa"
+            title="Torneo"
             textLoading="Loading...."
             v-model="showBottom"
             :persistent="true"
-            :limit-size="false"
+            :limit-size="true"
         >
-            <EmpresaForm :close-modal="closeModal"></EmpresaForm>
+            <TorneoForm :close-modal="closeModal"></TorneoForm>
         </CBottomSheet>
         <!-- END CUSTOM -->
         <CConfirmationDialog
@@ -168,7 +188,7 @@
 <script setup lang="ts">
 //COT-UI-LIB
 import { CBottomSheet, CButton, CConfirmationDialog } from "@core/index";
-import { useEmpresa } from "../composables/useEmpresa";
+import { useTorneo } from "../composables/useTorneo";
 //Controles core
 import {
     CCustomPagination,
@@ -179,7 +199,7 @@ import {
 import { URLS } from "@/helpers/constants";
 
 //Form
-import EmpresaForm from "../components/EmpresaForm.vue";
+import TorneoForm from "../components/TorneoForm.vue";
 
 const {
     search,
@@ -189,7 +209,7 @@ const {
     showBottom,
     saving,
     closeModal,
-    empresaList,
+    torneoList,
     showFilter,
     sortBy,
     headers,
@@ -203,5 +223,5 @@ const {
     loadingGrid,
     showFilterAction,
     showBottomAsignacion,
-} = useEmpresa();
+} = useTorneo();
 </script>

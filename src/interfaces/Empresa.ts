@@ -1,4 +1,4 @@
-export interface PrivateCompany {
+export interface Empresa {
     regHostNameCrecion: string;
     regRevisadoPor: string;
 
@@ -20,7 +20,7 @@ export interface PrivateCompany {
     extensionImg: string;
 }
 
-export interface PrivateCompanynRequestParams extends PrivateCompany {
+export interface EmpresanRequestParams extends Empresa {
     sortColumn: string | null;
     SortDir: "asc" | "desc";
     Offset: number;
@@ -33,7 +33,7 @@ export interface TypePaymentAccount {
     desciption: string;
 }
 
-export interface RequestNewCompany extends PrivateCompany {
+export interface RequestNewCompany extends Empresa {
     processId: Number;
     roleId: Number;
 }

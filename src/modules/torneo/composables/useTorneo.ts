@@ -1,29 +1,30 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useLoginStore } from "../../login/store/state";
 import { storeToRefs } from "pinia";
-import _ from "lodash";
-import { Empresa, EmpresanRequestParams } from "@/interfaces/Empresa";
+import _, { iteratee } from "lodash";
+import { Torneo, TorneoRequestParams } from "@/interfaces/Torneo";
 const { user } = storeToRefs(useLoginStore());
 
-import { useConnectionService } from "./useEmpresaService";
-import { useConnectionStore } from "../store/state";
+import { useTorneoService } from "./useTorneoService";
+import { useTorneoStore } from "../store/state";
 import { SortItem } from "@/interfaces/DataTables";
 import { getLocation } from "@/helpers/tools";
 const {
-    createEmpresa,
-    updateEmpresa,
-    deleteEmpresa,
-    selectEmpresa,
-    selectTypeEmpresa,
-    selImagenEmpresa,
-} = useConnectionService();
+    createTorneo,
+    updateTorneo,
+    deleteTorneo,
+    selectTorneo,
+    selImagenTorneo,
+    selectTypeTorneo,
+    selectEmpresaTorneo,
+} = useTorneoService();
 
-export const useEmpresa = () => {
+export const useTorneo = () => {
     //Importacion de state
     const {
         showBottom,
         showBottomAsignacion,
-        empresaList,
+        torneoList,
         totalCount,
         fields,
         fieldsFilter,
@@ -32,8 +33,7 @@ export const useEmpresa = () => {
         loadingGrid,
         testtingConnection,
         UserConnectionSelected,
-        typePaymentAccountList,
-    } = storeToRefs(useConnectionStore());
+    } = storeToRefs(useTorneoStore());
     //Variables con referncia
     const page = ref(1);
     const elementPerPage = ref(10);
@@ -53,112 +53,86 @@ export const useEmpresa = () => {
         UserConnectionSelected.value = [];
     };
 
-    const handleShowEdit = (item: Empresa) => {
+    const handleShowEdit = (item: Torneo) => {
         action.value = "EDIT";
         fillFields(item);
         showBottom.value = true;
     };
-    const handleShowDeleteDialog = (item: Empresa) => {
+    const handleShowDeleteDialog = (item: Torneo) => {
         action.value = "DELETE";
         fillFields(item);
         showConfirmationDialog.value = true;
     };
-    const handleSave = async (ConnectionData: Empresa) => {
-        // ConnectionData.empresaId = user.value?.user.idIDM;
-        ConnectionData.regRevisadoPor = user.value?.user.userName ?? "";
-        ConnectionData.regHostNameCrecion = getLocation();
+    const handleSave = async (ConnectionData: Torneo) => {
+        // ConnectionData.torneoId = user.value?.user.idIDM;
+        // ConnectionData.regRevisadoPor = user.value?.user.userName ?? "";
+        // ConnectionData.regHostNameCrecion = getLocation();
         action.value === "NEW"
-            ? await createEmpresa(ConnectionData)
-            : await updateEmpresa(ConnectionData);
+            ? await createTorneo(ConnectionData)
+            : await updateTorneo(ConnectionData);
         closeModal();
-        totalCount.value = await selectEmpresa(formatSelectValue());
+        totalCount.value = await selectTorneo(formatSelectValue());
     };
     const handleDelete = async () => {
         showConfirmationDialog.value = false;
-        await deleteEmpresa(fields.value.empresaId);
-        totalCount.value = await selectEmpresa(formatSelectValue());
+        await deleteTorneo(fields.value.torneoId);
+        totalCount.value = await selectTorneo(formatSelectValue());
     };
 
-    const fillFields = (item: Empresa) => {
+    const fillFields = (item: Torneo) => {
         location.value = getLocation();
         fields.value = {
-            colonia: item.colonia,
-            cp: item.cp,
+            clave: item.clave,
             descripcion: item.descripcion,
-            direccion: item.direccion,
-            email: item.email,
-            empresa: item.empresa,
-            empresaId: item.empresaId,
-            estado: item.estado,
+            torneoId: item.torneoId,
+            esPublico: item.esPublico,
             extensionImg: item.extensionImg,
+            fechaFin: item.fechaFin,
+            fechaInicio: item.fechaInicio,
             logo: item.logo,
-            pais: item.pais,
-            poblacion: item.poblacion,
-            razonSocial: item.razonSocial,
-            representante: item.representante,
-            regHostNameCrecion: location.value,
-            regRevisadoPor: user.value?.user.userName ?? "",
-            rfc: item.rfc,
-            telefono: item.telefono,
+            nombre: item.nombre,
+            tipoTorneoId: item.tipoTorneoId,
+            empresaId: item.empresaId,
         };
     };
 
     const resetFields = () => {
         fields.value = {
-            colonia: "",
-            cp: 0,
+            clave: "",
             descripcion: "",
-            direccion: "",
-            email: "",
-            empresa: "",
-            empresaId: 0,
-            estado: "",
+            torneoId: 0,
+            esPublico: false,
             extensionImg: "",
+            fechaFin: null,
+            fechaInicio: null,
             logo: "",
-            pais: "",
-            poblacion: "",
-            razonSocial: "",
-            representante: "",
-            regHostNameCrecion: "",
-            regRevisadoPor: "",
-            rfc: "",
-            telefono: "",
+            nombre: "",
+            tipoTorneoId: null,
+            empresaId: null,
         };
     };
     const resetFields_filter = () => {
         //Tiene que ser 1 pór 1 por temas de reactividad de pinia
-        fieldsFilter.value.empresaId = 0;
-        fieldsFilter.value.empresa = "";
-        fieldsFilter.value.descripcion = "";
-        fieldsFilter.value.razonSocial = "";
-        fieldsFilter.value.rfc = "";
-        fieldsFilter.value.cp = 0;
+        fieldsFilter.value.torneoId = 0;
         //fieldsFilter.value = {} as Connection;
     };
-    const formatSelectValue = (): EmpresanRequestParams => {
+    const formatSelectValue = (): TorneoRequestParams => {
         return {
-            empresaId: 0,
-            regHostNameCrecion: "",
-            regRevisadoPor: "",
-            colonia: "",
-            cp: 0,
+            torneoId: 0,
+            clave: "",
             descripcion: "",
-            direccion: "",
-            email: "",
-            empresa: "",
-            estado: "",
+            esPublico: false,
             extensionImg: "",
+            fechaFin: null,
+            fechaInicio: null,
             logo: "",
-            pais: "",
-            poblacion: "",
-            razonSocial: "",
-            representante: "",
-            rfc: "",
-            telefono: "",
+            nombre: "",
+            tipoTorneoId: 0,
+            empresaId: 0,
             Limit: elementPerPage.value,
             Offset: (page.value - 1) * elementPerPage.value,
             sortColumn:
-                sortBy.value.length > 0 ? sortBy.value[0].key : "Empresa",
+                sortBy.value.length > 0 ? sortBy.value[0].key : "TorneoId",
             SortDir: sortBy.value.length > 0 ? sortBy.value[0].order : "asc",
         };
     };
@@ -173,17 +147,22 @@ export const useEmpresa = () => {
     //Onmounted
     onMounted(async () => {
         if (action.value === "INIT")
-            totalCount.value = await selectEmpresa(formatSelectValue());
+            totalCount.value = await selectTorneo(formatSelectValue());
     });
 
     //Computed
     const headers = computed(() => {
         return [
             {
-                title: "Empresa",
-                key: "empresa",
+                title: "Clave ",
+                key: "clave",
                 sortable: !showFilter.value,
                 width: "250px",
+            },
+            {
+                title: "Nombre",
+                key: "nombre",
+                sortable: !showFilter.value,
             },
             {
                 title: "Descripcion",
@@ -191,18 +170,23 @@ export const useEmpresa = () => {
                 sortable: !showFilter.value,
             },
             {
-                title: "RFC",
-                key: "rfc",
+                title: "Fecha Inicio",
+                key: "fechaInicio",
                 sortable: !showFilter.value,
             },
             {
-                title: "Email",
-                key: "email",
+                title: "Fecha Fin",
+                key: "fechaFin",
                 sortable: !showFilter.value,
             },
             {
-                title: "Representante",
-                key: "representante",
+                title: "Tipo Torneo",
+                key: "tipoTorneo",
+                sortable: !showFilter.value,
+            },
+            {
+                title: "¿Es publico?",
+                key: "esPublico",
                 sortable: !showFilter.value,
             },
             {
@@ -222,7 +206,7 @@ export const useEmpresa = () => {
     const dialogMessage = computed(() => {
         return {
             DELETE: {
-                title: "Esta empresa sera removida",
+                title: "Esta torneo sera removida",
                 subtitle: "Y esta acción no puede ser deshecha",
                 textButton: "Aceptar",
                 onClick: () => handleDelete(),
@@ -232,13 +216,13 @@ export const useEmpresa = () => {
 
     // Watchers
     watch([page, elementPerPage, sortBy], async () => {
-        await selectEmpresa(formatSelectValue());
+        await selectTorneo(formatSelectValue());
     });
 
     watch(
         [fieldsFilter.value],
         _.debounce(async () => {
-            await selectEmpresa(formatSelectValue());
+            await selectTorneo(formatSelectValue());
         }, 600)
     );
 
@@ -258,7 +242,7 @@ export const useEmpresa = () => {
         saving,
         fields,
         fieldsFilter,
-        empresaList,
+        torneoList,
         showFilter,
         sortBy,
         headers,
@@ -270,7 +254,6 @@ export const useEmpresa = () => {
         testtingConnection,
         showBottomAsignacion,
         UserConnectionSelected,
-        typePaymentAccountList,
         closeModal,
         handleSave,
         handleShowEdit,
@@ -278,8 +261,9 @@ export const useEmpresa = () => {
         handleShowDeleteDialog,
         showFilterAction,
         closeModalAsignaciones,
-        selectEmpresa,
-        createEmpresa,
-        selImagenEmpresa,
+        createTorneo,
+        selImagenTorneo,
+        selectTypeTorneo,
+        selectEmpresaTorneo,
     };
 };

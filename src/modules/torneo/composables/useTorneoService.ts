@@ -1,32 +1,28 @@
 import axios from "axios";
 import { storeToRefs } from "pinia";
-import { useConnectionStore } from "../store/state";
+import { useTorneoStore } from "../store/state";
 import { URLS } from "@/helpers/constants";
 import { buildParams } from "@/modules/login/helpers/axiosHelper";
 import { useTemplateUI } from "@/store/templateUI";
-import {
-    Empresa,
-    EmpresanRequestParams,
-    TypePaymentAccount,
-} from "@/interfaces/Empresa";
+import { TipoTorneo, Torneo, TorneoRequestParams } from "@/interfaces/Torneo";
+import { Empresa } from "@/interfaces/Empresa";
 
 /**
- * A composable function that provides connection service methods.
- * @returns An object containing connection service methods.
+ * A composable function that provides torneo service methods.
+ * @returns An object containing torneo service methods.
  */
-export const useConnectionService = () => {
+export const useTorneoService = () => {
     const { handleShowSnackbar } = useTemplateUI();
-    const { empresaList, loadingGrid, typePaymentAccountList } =
-        storeToRefs(useConnectionStore());
+    const { torneoList, loadingGrid } = storeToRefs(useTorneoStore());
 
     /**
-     * Creates a new connection.
-     * @param connectionData - The connection data to be created.
+     * Creates a new torneo.
+     * @param torneoData - The torneo data to be created.
      */
-    const createEmpresa = async (companyData: Empresa) => {
+    const createTorneo = async (companyData: Torneo) => {
         try {
             const response = await axios.post(
-                `${URLS.COTBUILDER}/api/Empresa`,
+                `${URLS.COTBUILDER}/api/Torneo`,
                 companyData
             );
 
@@ -47,14 +43,14 @@ export const useConnectionService = () => {
     };
 
     /**
-     * Updates an existing connection.
-     * @param connectionData - The connection data to be updated.
+     * Updates an existing torneo.
+     * @param torneoData - The torneo data to be updated.
      */
-    const updateEmpresa = async (connectionData: Empresa) => {
+    const updateTorneo = async (torneoData: Torneo) => {
         try {
             const response = await axios.put(
-                `${URLS.COTBUILDER}/api/Empresa/${connectionData.empresaId}`,
-                connectionData
+                `${URLS.COTBUILDER}/api/Torneo/${torneoData.torneoId}`,
+                torneoData
             );
 
             if (response.status === 200) {
@@ -74,13 +70,13 @@ export const useConnectionService = () => {
     };
 
     /**
-     * Deletes a connection.
-     * @param connectionId - The ID of the connection to be deleted.
+     * Deletes a torneo.
+     * @param torneoId - The ID of the torneo to be deleted.
      */
-    const deleteEmpresa = async (connectionId: number) => {
+    const deleteTorneo = async (torneoId: number) => {
         try {
             const response = await axios.delete(
-                `${URLS.COTBUILDER}/api/Empresa/${connectionId}`
+                `${URLS.COTBUILDER}/api/Torneo/${torneoId}`
             );
 
             if (response.status === 200) {
@@ -100,13 +96,11 @@ export const useConnectionService = () => {
     };
 
     /**
-     * Retrieves a list of connections based on the specified request parameters.
+     * Retrieves a list of torneos based on the specified request parameters.
      * @param requestModel - The request parameters for filtering and pagination.
-     * @returns The total count of connections.
+     * @returns The total count of torneos.
      */
-    const selectEmpresa = async (
-        requestModel: EmpresanRequestParams
-    ) => {
+    const selectTorneo = async (requestModel: TorneoRequestParams) => {
         try {
             loadingGrid.value = true;
             const parameters = buildParams({
@@ -114,13 +108,13 @@ export const useConnectionService = () => {
             });
 
             const { data } = await axios.get<{
-                data: Empresa[];
+                data: Torneo[];
                 totalCount: number;
-            }>(`${URLS.COTBUILDER}/api/empresa`, {
+            }>(`${URLS.COTBUILDER}/api/torneo`, {
                 params: parameters,
             });
 
-            empresaList.value = data.data;
+            torneoList.value = data.data;
             loadingGrid.value = false;
             return data.totalCount;
         } catch (error) {
@@ -136,26 +130,48 @@ export const useConnectionService = () => {
         }
     };
 
-    const selectTypeEmpresa = async () => {
+    const selectTypeTorneo = async () => {
         try {
-            const { data } = await axios.get<TypePaymentAccount[]>(
-                `${URLS.COTBUILDER}/api/Empresa/GetAllAccountType`
+            const { data } = await axios.get<{
+                data: TipoTorneo[];
+                totalCount: number;
+            }>(
+                `${URLS.COTBUILDER}/api/TipoTorneo?SortColumn=TipoTorneoId&Offset=0&Next_Rows=100&SortDirection=ASC`
             );
-            typePaymentAccountList.value = data;
+            return data.data;
         } catch (error) {
             handleShowSnackbar({
                 text: `Something went wrong, contact the system administrator`,
                 type: "error",
                 valueModel: true,
             });
-            return 0;
+            return [];
         }
     };
 
-    const selImagenEmpresa = async (EmpresaId: number, Logo: string) => {
+    const selectEmpresaTorneo = async () => {
+        try {
+            const { data } = await axios.get<{
+                data: Empresa[];
+                totalCount: number;
+            }>(
+                `${URLS.COTBUILDER}/api/Empresa?SortColumn=EmpresaId&Offset=0&Next_Rows=100&SortDirection=ASC`
+            );
+            return data.data;
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Something went wrong, contact the system administrator`,
+                type: "error",
+                valueModel: true,
+            });
+            return [];
+        }
+    };
+
+    const selImagenTorneo = async (TorneoId: number, Logo: string) => {
         try {
             const { data } = await axios.get(
-                `${URLS.COTBUILDER}/api/Empresa/logo/${EmpresaId}/${Logo}`,
+                `${URLS.COTBUILDER}/api/Torneo/logo/${TorneoId}/${Logo}`,
                 { responseType: "blob" }
             );
             const base64 = await blobToBase64(data);
@@ -182,11 +198,12 @@ export const useConnectionService = () => {
     };
 
     return {
-        createEmpresa,
-        selectEmpresa,
-        updateEmpresa,
-        deleteEmpresa,
-        selectTypeEmpresa,
-        selImagenEmpresa,
+        createTorneo,
+        selectTorneo,
+        updateTorneo,
+        deleteTorneo,
+        selImagenTorneo,
+        selectTypeTorneo,
+        selectEmpresaTorneo
     };
 };

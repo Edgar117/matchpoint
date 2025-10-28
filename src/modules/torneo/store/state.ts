@@ -1,10 +1,9 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
-import { Empresa, TypePaymentAccount } from "@/interfaces/Empresa";
+import { Torneo } from "@/interfaces/Torneo";
 
-export const useConnectionStore = defineStore("empresa", () => {
-    const empresaList = ref<Empresa[]>([]);
-    const typePaymentAccountList = ref<TypePaymentAccount[]>([]);
+export const useTorneoStore = defineStore("torneo", () => {
+    const torneoList = ref<Torneo[]>([]);
     const UserConnectionSelected = ref<number[]>([]);
     const showBottom = ref(false);
     const showBottomAsignacion = ref(false);
@@ -14,11 +13,11 @@ export const useConnectionStore = defineStore("empresa", () => {
     const loadingGrid = ref(false);
     const testtingConnection = ref(false);
     //form field
-    const fields = ref<Empresa>({} as Empresa);
-    const fieldsFilter = ref<Empresa>({} as Empresa);
+    const fields = ref<Torneo>({} as Torneo);
+    const fieldsFilter = ref<Torneo>({} as Torneo);
 
     return {
-        empresaList,
+        torneoList,
         showBottom,
         totalCount,
         fields,
@@ -29,6 +28,5 @@ export const useConnectionStore = defineStore("empresa", () => {
         testtingConnection,
         showBottomAsignacion,
         UserConnectionSelected,
-        typePaymentAccountList
     };
 });
