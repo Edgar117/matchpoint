@@ -10,6 +10,11 @@ export interface Equipo {
     poblacion: string;
     colonia: string;
     logo: string;
+    extensionImg: string;
+    esRamaVaronil: boolean;
+    esRamaFemenil: boolean;
+    esRamaMixto: boolean;
+    categorias: number[] | null;
 }
 
 export interface EquiponRequestParams extends Equipo {
@@ -18,3 +23,11 @@ export interface EquiponRequestParams extends Equipo {
     Offset: number;
     Limit: number;
 }
+
+// export interface Categoria {
+//     equipoCategoriaId: number;
+//     torneoId: number;
+//     equipoId: number;
+//     categoriaId: number;
+//     regBorrado: number;
+// }

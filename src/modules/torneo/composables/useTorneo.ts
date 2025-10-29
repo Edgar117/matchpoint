@@ -132,7 +132,7 @@ export const useTorneo = () => {
             Limit: elementPerPage.value,
             Offset: (page.value - 1) * elementPerPage.value,
             sortColumn:
-                sortBy.value.length > 0 ? sortBy.value[0].key : "TorneoId",
+                sortBy.value.length > 0 ? sortBy.value[0].key : "torneoId",
             SortDir: sortBy.value.length > 0 ? sortBy.value[0].order : "asc",
         };
     };

@@ -9,8 +9,13 @@ import { useEquipoService } from "./useEquipoService";
 import { useEquipoStore } from "../store/state";
 import { SortItem } from "@/interfaces/DataTables";
 import { getLocation } from "@/helpers/tools";
-const { createEquipo, updateEquipo, deleteEquipo, selectEquipo } =
-    useEquipoService();
+const {
+    createEquipo,
+    updateEquipo,
+    deleteEquipo,
+    selectEquipo,
+    selectCategoriasEquipos,
+} = useEquipoService();
 
 export const useEquipo = () => {
     //Importacion de state
@@ -125,7 +130,7 @@ export const useEquipo = () => {
             Limit: elementPerPage.value,
             Offset: (page.value - 1) * elementPerPage.value,
             sortColumn:
-                sortBy.value.length > 0 ? sortBy.value[0].key : "EquipoId",
+                sortBy.value.length > 0 ? sortBy.value[0].key : "equipoId",
             SortDir: sortBy.value.length > 0 ? sortBy.value[0].order : "asc",
         };
     };
@@ -247,6 +252,7 @@ export const useEquipo = () => {
         closeModalAsignaciones,
         selectEquipo,
         createEquipo,
-        handleShowAsignacionJugadores
+        handleShowAsignacionJugadores,
+        selectCategoriasEquipos,
     };
 };

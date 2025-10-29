@@ -5,6 +5,7 @@ import { URLS } from "@/helpers/constants";
 import { buildParams } from "@/modules/login/helpers/axiosHelper";
 import { useTemplateUI } from "@/store/templateUI";
 import { Equipo, EquiponRequestParams } from "@/interfaces/Equipo";
+import { Categoria } from "@/interfaces/Categoria";
 
 /**
  * A composable function that provides equipo service methods.
@@ -18,11 +19,40 @@ export const useEquipoService = () => {
      * Creates a new equipo.
      * @param equipoData - The equipo data to be created.
      */
-    const createEquipo = async (companyData: Equipo) => {
+    const createEquipo = async (equipoData: Equipo) => {
         try {
+            // Transformar las categorías (array de IDs → array de objetos)
+            const categoriasTransformadas = equipoData.categorias?.map(
+                (id: number) => ({
+                    equipoCategoriaId: 0,
+                    torneoId: equipoData.torneoId || 0,
+                    equipoId: equipoData.equipoId || 0,
+                    categoriaId: id,
+                    regBorrado: 0,
+                })
+            );
+
+            const payload = {
+                empresaId: 0,
+                equipoId: equipoData.equipoId || 0,
+                nombre: equipoData.nombre,
+                descripcion: equipoData.descripcion,
+                entrenador: equipoData.entrenador,
+                pais: equipoData.pais,
+                estado: equipoData.estado,
+                poblacion: equipoData.poblacion,
+                colonia: equipoData.colonia,
+                logo: equipoData.logo || "",
+                esRamaVaronil: equipoData.esRamaVaronil,
+                esRamaFemenil: equipoData.esRamaFemenil,
+                esRamaMixto: equipoData.esRamaMixto,
+                extensionImg: equipoData.extensionImg, // si no tienes, lo puedes dejar vacío
+                categorias: categoriasTransformadas,
+            };
+
             const response = await axios.post(
                 `${URLS.COTBUILDER}/api/Equipo`,
-                companyData
+                payload
             );
 
             if (response.status === 200) {
@@ -129,10 +159,30 @@ export const useEquipoService = () => {
         }
     };
 
+    const selectCategoriasEquipos = async () => {
+        try {
+            const { data } = await axios.get<{
+                data: Categoria[];
+                totalCount: number;
+            }>(
+                `${URLS.COTBUILDER}/api/Categoria?SortColumn=categoriaId&Offset=0&Next_Rows=100&SortDirection=ASC`
+            );
+            return data.data;
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Something went wrong, contact the system administrator`,
+                type: "error",
+                valueModel: true,
+            });
+            return [];
+        }
+    };
+
     return {
         createEquipo,
         selectEquipo,
         updateEquipo,
         deleteEquipo,
+        selectCategoriasEquipos,
     };
 };
