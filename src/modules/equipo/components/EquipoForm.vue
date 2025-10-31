@@ -193,11 +193,33 @@ const archivoLoaded = ref<{ base64?: string; name?: string; type?: string }>(
     {}
 );
 
-const { fields, handleSave, selectCategoriasEquipos } = useEquipo();
+const { fields, handleSave, selectCategoriasEquipos, selImagenEquipo } =
+    useEquipo();
 
 const Categorias = ref<any[]>([]);
 
 onMounted(async () => {
     Categorias.value = await selectCategoriasEquipos();
+    if (fields.value.equipoId) {
+        // vamos a buscar la imagen
+        const baseImagen = await selImagenEquipo(
+            fields.value.equipoId,
+            fields.value.logo
+        );
+        archivoLoaded.value = baseImagen
+            ? {
+                  base64: `${baseImagen}`,
+                  name: "Logo.jpg",
+                  type: "image/jpg",
+              }
+            : {};
+
+        fields.value.logo =
+            typeof baseImagen === "string" && baseImagen !== null
+                ? baseImagen.split(",")[1]
+                : "";
+
+        fields.value.extensionImg = "Logo.jpg";
+    }
 });
 </script>

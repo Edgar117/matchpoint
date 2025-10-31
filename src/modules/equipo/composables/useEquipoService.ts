@@ -77,9 +77,38 @@ export const useEquipoService = () => {
      */
     const updateEquipo = async (equipoData: Equipo) => {
         try {
+            // Transformar las categorías (array de IDs → array de objetos)
+            const categoriasTransformadas = equipoData.categorias?.map(
+                (id: number) => ({
+                    equipoCategoriaId: 0,
+                    torneoId: equipoData.torneoId || 0,
+                    equipoId: equipoData.equipoId || 0,
+                    categoriaId: id,
+                    regBorrado: 0,
+                })
+            );
+
+            const payload = {
+                empresaId: 0,
+                equipoId: equipoData.equipoId || 0,
+                nombre: equipoData.nombre,
+                descripcion: equipoData.descripcion,
+                entrenador: equipoData.entrenador,
+                pais: equipoData.pais,
+                estado: equipoData.estado,
+                poblacion: equipoData.poblacion,
+                colonia: equipoData.colonia,
+                logo: equipoData.logo || "",
+                esRamaVaronil: equipoData.esRamaVaronil,
+                esRamaFemenil: equipoData.esRamaFemenil,
+                esRamaMixto: equipoData.esRamaMixto,
+                extensionImg: equipoData.extensionImg, // si no tienes, lo puedes dejar vacío
+                categorias: categoriasTransformadas,
+            };
+
             const response = await axios.put(
                 `${URLS.COTBUILDER}/api/Equipo/${equipoData.equipoId}`,
-                equipoData
+                payload
             );
 
             if (response.status === 200) {
@@ -137,13 +166,44 @@ export const useEquipoService = () => {
             });
 
             const { data } = await axios.get<{
-                data: Equipo[];
+                data: any[];
                 totalCount: number;
             }>(`${URLS.COTBUILDER}/api/equipo`, {
                 params: parameters,
             });
+            const equipos: Equipo[] = data.data.map((item) => {
+                let categorias: number[] | null = null;
 
-            equipoList.value = data.data;
+                if (item.categorias) {
+                    try {
+                        const parsed = JSON.parse(item.categorias);
+                        categorias = parsed.map((c: any) => c.CategoriaId);
+                    } catch {
+                        categorias = null; // si no se puede parsear
+                    }
+                }
+
+                return {
+                    torneoId: item.torneoId ?? null,
+                    torneo: item.torneo ?? "",
+                    equipoId: item.equipoId,
+                    entrenador: item.entrenador,
+                    nombre: item.nombre,
+                    descripcion: item.descripcion,
+                    pais: item.pais,
+                    estado: item.estado,
+                    poblacion: item.poblacion,
+                    colonia: item.colonia,
+                    logo: item.logo,
+                    extensionImg: item.extensionImg ?? "",
+                    esRamaVaronil: item.esRamaVaronil,
+                    esRamaFemenil: item.esRamaFemenil,
+                    esRamaMixto: item.esRamaMixto,
+                    categorias,
+                };
+            });
+
+            equipoList.value = equipos;
             loadingGrid.value = false;
             return data.totalCount;
         } catch (error) {
@@ -178,11 +238,39 @@ export const useEquipoService = () => {
         }
     };
 
+    const selImagenEquipo = async (EmpresaId: number, Logo: string) => {
+        try {
+            const { data } = await axios.get(
+                `${URLS.COTBUILDER}/api/Equipo/logo/${EmpresaId}/${Logo}`,
+                { responseType: "blob" }
+            );
+            const base64 = await blobToBase64(data);
+            // console.log(base64);
+            return base64;
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Something went wrong, contact the system administrator`,
+                type: "error",
+                valueModel: true,
+            });
+            return 0;
+        }
+    };
+    const blobToBase64 = (blob: Blob): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    };
+
     return {
         createEquipo,
         selectEquipo,
         updateEquipo,
         deleteEquipo,
         selectCategoriasEquipos,
+        selImagenEquipo
     };
 };

@@ -15,6 +15,7 @@ const {
     deleteEquipo,
     selectEquipo,
     selectCategoriasEquipos,
+    selImagenEquipo
 } = useEquipoService();
 
 export const useEquipo = () => {
@@ -90,6 +91,11 @@ export const useEquipo = () => {
             pais: item.pais,
             poblacion: item.poblacion,
             torneoId: item.torneoId,
+            categorias: item.categorias,
+            esRamaFemenil: item.esRamaFemenil,
+            esRamaMixto: item.esRamaMixto,
+            esRamaVaronil: item.esRamaVaronil,
+            extensionImg: item.extensionImg,
         };
     };
 
@@ -105,6 +111,11 @@ export const useEquipo = () => {
             pais: "",
             poblacion: "",
             torneoId: null,
+            categorias: [],
+            esRamaFemenil: false,
+            esRamaMixto: false,
+            esRamaVaronil: false,
+            extensionImg: "",
         };
     };
     const resetFields_filter = () => {
@@ -118,7 +129,7 @@ export const useEquipo = () => {
         return {
             equipoId: 0,
             colonia: "",
-            entrenador: "",
+            entrenador: fieldsFilter.value.entrenador,
             estado: "",
             logo: "",
             nombre: "",
@@ -126,6 +137,11 @@ export const useEquipo = () => {
             poblacion: "",
             torneoId: 0,
             torneo: "",
+            categorias: [],
+            esRamaFemenil: false,
+            esRamaMixto: false,
+            esRamaVaronil: false,
+            extensionImg: "",
             descripcion: fieldsFilter.value.descripcion,
             Limit: elementPerPage.value,
             Offset: (page.value - 1) * elementPerPage.value,
@@ -254,5 +270,6 @@ export const useEquipo = () => {
         createEquipo,
         handleShowAsignacionJugadores,
         selectCategoriasEquipos,
+        selImagenEquipo
     };
 };
