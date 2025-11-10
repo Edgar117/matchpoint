@@ -119,6 +119,7 @@
                     counter="100"
                 ></v-text-field>
             </Field>
+            
             <v-autocomplete
                 label="Categorías"
                 :items="Categorias"

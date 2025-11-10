@@ -5,7 +5,7 @@
         fullscreen
     >
         <div
-            class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6"
+            class="min-h-screen max-h-screen overflow-y-auto bg-gradient-to-br from-slate-50 to-slate-100 p-6"
         >
             <div class="max-w-7xl mx-auto">
                 <div class="flex justify-end mb-4">
@@ -85,7 +85,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-slate-600 mb-1">
-                                    Torneos Participados
+                                    Categorías Disponibles
                                 </p>
                                 <p class="text-3xl font-bold text-slate-900">
                                     {{ teams.length }}
@@ -126,17 +126,24 @@
                     <div class="p-6">
                         <PlayerForm
                             v-if="activeTab === 'create'"
-                            @player-created="handlePlayerCreated"
+                            :equipo-id="props.equipoId"
+                            :torneo-id="props.torneoId"
+                            :ramas="ramas"
+                            :categorias="categorias"
+                            :is-saving="savingPlayer"
+                            @submit="handlePlayerCreated"
                         />
                         <PlayerList
                             v-if="activeTab === 'list'"
                             :players="players"
+                            :is-loading="loadingPlayers"
                             @delete-player="handleDeletePlayer"
                         />
                         <TeamAssignment
                             v-if="activeTab === 'assign'"
                             :players="players"
                             :teams="teams"
+                            :ramas="ramas"
                             @assign-player="handleAssignPlayer"
                         />
                     </div>
@@ -147,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import {
     Users,
     UserCheck,
@@ -159,10 +166,20 @@ import {
 import PlayerForm from "./PlayerForm.vue";
 import PlayerList from "./PlayerList.vue";
 import TeamAssignment from "./TeamAssignment.vue";
+import { useEquipoService } from "../composables/useEquipoService";
+import { useJugadorService } from "../composables/useJugadorService";
+import type {
+    CategoriaEquipo,
+    Jugador,
+    JugadorRequest,
+    RamaEquipo,
+} from "@/interfaces/Jugador";
 
 interface IProps {
     equipoNombre: string;
     modelValue: boolean;
+    equipoId?: number;
+    torneoId?: number | null;
 }
 
 const emit = defineEmits(["update:modelValue"]);
@@ -170,6 +187,8 @@ const emit = defineEmits(["update:modelValue"]);
 const props = withDefaults(defineProps<IProps>(), {
     equipoNombre: "",
     modelValue: false,
+    equipoId: 0,
+    torneoId: null,
 });
 
 const modelValue = computed({
@@ -183,17 +202,23 @@ const modelValue = computed({
 
 interface Player {
     id: string;
+    jugadorId: number;
     name: string;
-    position: string;
-    number: number;
-    age: number;
-    teamId?: string;
+    number: number | null;
+    age: number | null;
+    categoriaId?: number | null;
+    categoriaNombre?: string;
+    ramaId?: number | null;
+    ramaNombre?: string;
+    curp?: string;
+    fechaNacimiento?: string | null;
 }
 
 interface Team {
     id: string;
     name: string;
-    color: string;
+    color?: string;
+    categoriaId: number;
 }
 
 const activeTab = ref<"create" | "list" | "assign">("create");
@@ -204,59 +229,195 @@ const tabs = [
     { id: "assign" as const, label: "Asignar a Categoria", icon: UsersRound },
 ];
 
-const players = ref<Player[]>([
-    {
-        id: "1",
-        name: "Carlos Rodríguez",
-        position: "Delantero",
-        number: 9,
-        age: 25,
-        teamId: "team1",
-    },
-    {
-        id: "2",
-        name: "María González",
-        position: "Defensa",
-        number: 4,
-        age: 23,
-        teamId: "team1",
-    },
-    {
-        id: "3",
-        name: "Juan Pérez",
-        position: "Mediocampista",
-        number: 10,
-        age: 27,
-    },
-]);
+const { selectCategoriasPorEquipo, selectRamasPorEquipo } =
+    useEquipoService();
+const { fetchJugadores, createJugador, updateJugador, deleteJugador } =
+    useJugadorService();
 
-const teams = ref<Team[]>([
-    { id: "team1", name: "Categoria Juvenil", color: "bg-blue-500" },
-    { id: "team2", name: "Categoria JR", color: "bg-red-500" },
-    { id: "team3", name: "Veteranos", color: "bg-green-500" },
-]);
+const categorias = ref<CategoriaEquipo[]>([]);
+const ramas = ref<RamaEquipo[]>([]);
+const rawPlayers = ref<Jugador[]>([]);
+const players = ref<Player[]>([]);
+const loadingCatalogs = ref(false);
+const loadingPlayers = ref(false);
+const savingPlayer = ref(false);
 
-const assignedPlayersCount = computed(() => {
-    return players.value.filter((p) => p.teamId).length;
+const teams = computed<Team[]>(() => {
+    const palette = [
+        "bg-purple-500",
+        "bg-blue-500",
+        "bg-emerald-500",
+        "bg-amber-500",
+        "bg-rose-500",
+    ];
+    return categorias.value.map((categoria, index) => ({
+        id: String(categoria.categoriaId),
+        name: categoria.categoria,
+        color: palette[index % palette.length],
+        categoriaId: categoria.categoriaId,
+    }));
 });
 
-const handlePlayerCreated = (player: Omit<Player, "id">) => {
-    const newPlayer: Player = {
-        ...player,
-        id: Date.now().toString(),
-    };
-    players.value.push(newPlayer);
-    activeTab.value = "list";
+const assignedPlayersCount = computed(() =>
+    players.value.filter((player) => player.categoriaId && player.ramaId).length
+);
+
+const categoriaNameById = (categoriaId?: number | null) => {
+    if (!categoriaId) return "";
+    return (
+        categorias.value.find(
+            (categoria) => categoria.categoriaId === categoriaId
+        )?.categoria ?? ""
+    );
 };
 
-const handleDeletePlayer = (playerId: string) => {
-    players.value = players.value.filter((p) => p.id !== playerId);
+const ramaNameById = (ramaId?: number | null) => {
+    if (!ramaId) return "";
+    return (
+        ramas.value.find((rama) => rama.ramaId === ramaId)?.nombre ?? ""
+    );
 };
 
-const handleAssignPlayer = (playerId: string, teamId: string) => {
-    const player = players.value.find((p) => p.id === playerId);
-    if (player) {
-        player.teamId = teamId;
+const calculateAge = (isoDate?: string | null) => {
+    if (!isoDate) return null;
+    const birth = new Date(isoDate);
+    if (Number.isNaN(birth.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
+        age--;
     }
+    return age;
+};
+
+const mapJugadorToPlayer = (jugador: Jugador): Player => {
+    const primaryAssignment = jugador.equipoJugador?.[0];
+    const fullName = [jugador.nombre, jugador.apellidoPaterno, jugador.apellidoMaterno]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+
+    const categoriaId = primaryAssignment?.categoriaId ?? null;
+    const ramaId = primaryAssignment?.ramaId ?? null;
+
+    return {
+        id: jugador.jugadorId.toString(),
+        jugadorId: jugador.jugadorId,
+        name: fullName || jugador.nombre,
+        number: primaryAssignment?.num ?? null,
+        age: calculateAge(jugador.fechaNacimiento),
+        categoriaId,
+        ramaId,
+        categoriaNombre:
+            primaryAssignment?.categoriaNombre ?? categoriaNameById(categoriaId),
+        ramaNombre: primaryAssignment?.ramaNombre ?? ramaNameById(ramaId),
+        curp: jugador.curp,
+        fechaNacimiento: jugador.fechaNacimiento,
+    };
+};
+
+const loadCatalogs = async () => {
+    if (!props.equipoId || !props.torneoId) {
+        categorias.value = [];
+        ramas.value = [];
+        return;
+    }
+    loadingCatalogs.value = true;
+    try {
+        const [ramasResponse, categoriasResponse] = await Promise.all([
+            selectRamasPorEquipo(props.torneoId, props.equipoId),
+            selectCategoriasPorEquipo(props.torneoId, props.equipoId),
+        ]);
+        ramas.value = ramasResponse;
+        categorias.value = categoriasResponse;
+    } finally {
+        loadingCatalogs.value = false;
+    }
+};
+
+const loadPlayers = async () => {
+    if (!props.equipoId) {
+        rawPlayers.value = [];
+        players.value = [];
+        return;
+    }
+    loadingPlayers.value = true;
+    try {
+        const response = await fetchJugadores({
+            equipoId: props.equipoId,
+            torneoId: props.torneoId ?? undefined,
+        });
+        rawPlayers.value = response;
+        players.value = response.map(mapJugadorToPlayer);
+    } finally {
+        loadingPlayers.value = false;
+    }
+};
+
+watch(
+    () => [props.equipoId, props.torneoId],
+    async () => {
+        await loadCatalogs();
+        await loadPlayers();
+    },
+    { immediate: true }
+);
+
+const handlePlayerCreated = async (payload: JugadorRequest) => {
+    savingPlayer.value = true;
+    try {
+        await createJugador(payload);
+        await loadPlayers();
+        activeTab.value = "list";
+    } finally {
+        savingPlayer.value = false;
+    }
+};
+
+const handleDeletePlayer = async (playerId: string) => {
+    const jugadorId = Number(playerId);
+    if (!jugadorId) return;
+    await deleteJugador(jugadorId);
+    await loadPlayers();
+};
+
+const handleAssignPlayer = async (
+    playerId: string,
+    teamId: string,
+    ramaId: string
+) => {
+    const jugadorId = Number(playerId);
+    if (!jugadorId) return;
+    const jugador = rawPlayers.value.find(
+        (item) => item.jugadorId === jugadorId
+    );
+    if (!jugador) return;
+
+    const primaryAssignment = jugador.equipoJugador?.[0] ?? {
+        equipoJugadorId: 0,
+        posicionTipoTorneoId: 0,
+        num: 0,
+        jugador: `${jugador.nombre} ${jugador.apellidoPaterno ?? ""} ${
+            jugador.apellidoMaterno ?? ""
+        }`.trim(),
+    };
+
+    const updatedPayload: JugadorRequest = {
+        ...jugador,
+        equipoJugador: [
+            {
+                ...primaryAssignment,
+                categoriaId: Number(teamId) || 0,
+                ramaId: Number(ramaId) || 0,
+            },
+        ],
+    };
+
+    await updateJugador(jugadorId, updatedPayload);
+    await loadPlayers();
 };
 </script>

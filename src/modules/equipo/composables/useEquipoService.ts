@@ -6,6 +6,7 @@ import { buildParams } from "@/modules/login/helpers/axiosHelper";
 import { useTemplateUI } from "@/store/templateUI";
 import { Equipo, EquiponRequestParams } from "@/interfaces/Equipo";
 import { Categoria } from "@/interfaces/Categoria";
+import { CategoriaEquipo, RamaEquipo } from "@/interfaces/Jugador";
 
 /**
  * A composable function that provides equipo service methods.
@@ -238,6 +239,107 @@ export const useEquipoService = () => {
         }
     };
 
+    const selectRamasPorEquipo = async (
+        torneoId: number | null,
+        equipoId: number,
+        offset = 0,
+        nextRows = 100
+    ): Promise<RamaEquipo[]> => {
+        if (!torneoId || !equipoId) return [];
+        try {
+            const { data } = await axios.get(`${URLS.COTBUILDER}/api/Equipo/Ramas`, {
+                params: {
+                    TorneoId: torneoId,
+                    EquipoId: equipoId,
+                    SortColumn: "TorneoId",
+                    Offset: offset,
+                    Next_Rows: nextRows,
+                    SortDirection: "ASC",
+                },
+            });
+
+            const source: any = data;
+            const collection = Array.isArray(source?.data)
+                ? source.data
+                : Array.isArray(source)
+                ? source
+                : [];
+
+            return collection.map((item: any): RamaEquipo => ({
+                ramaId:
+                    item.ramaId ??
+                    item.RamaId ??
+                    item.equipoRamaId ??
+                    item.EquipoRamaId ??
+                    0,
+                nombre: item.nombre ?? item.Nombre ?? item.rama ?? item.Rama ?? "",
+                descripcion: item.descripcion ?? item.Descripcion ?? "",
+                esRamaVaronil: item.esRamaVaronil ?? item.EsRamaVaronil ?? false,
+                esRamaFemenil: item.esRamaFemenil ?? item.EsRamaFemenil ?? false,
+                esRamaMixto: item.esRamaMixto ?? item.EsRamaMixto ?? false,
+            }));
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Something went wrong, contact the system administrator`,
+                type: "error",
+                valueModel: true,
+            });
+            return [];
+        }
+    };
+
+    const selectCategoriasPorEquipo = async (
+        torneoId: number | null,
+        equipoId: number,
+        offset = 0,
+        nextRows = 100
+    ): Promise<CategoriaEquipo[]> => {
+        if (!torneoId || !equipoId) return [];
+        try {
+            const { data } = await axios.get(`${URLS.COTBUILDER}/api/Equipo/Categorias`, {
+                params: {
+                    TorneoId: torneoId,
+                    EquipoId: equipoId,
+                    SortColumn: "TorneoId",
+                    Offset: offset,
+                    Next_Rows: nextRows,
+                    SortDirection: "ASC",
+                },
+            });
+
+            const source: any = data;
+            const collection = Array.isArray(source?.data)
+                ? source.data
+                : Array.isArray(source)
+                ? source
+                : [];
+
+            return collection.map((item: any): CategoriaEquipo => ({
+                categoriaId:
+                    item.categoriaId ??
+                    item.CategoriaId ??
+                    item.equipoCategoriaId ??
+                    item.EquipoCategoriaId ??
+                    0,
+                categoria:
+                    item.categoria ??
+                    item.Categoria ??
+                    item.nombre ??
+                    item.Nombre ??
+                    "",
+                descripcion: item.descripcion ?? item.Descripcion ?? "",
+                ramaId: item.ramaId ?? item.RamaId ?? undefined,
+            }));
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Something went wrong, contact the system administrator`,
+                type: "error",
+                valueModel: true,
+            });
+            return [];
+        }
+    };
+
     const selImagenEquipo = async (EmpresaId: number, Logo: string) => {
         try {
             const { data } = await axios.get(
@@ -271,6 +373,8 @@ export const useEquipoService = () => {
         updateEquipo,
         deleteEquipo,
         selectCategoriasEquipos,
-        selImagenEquipo
+        selImagenEquipo,
+        selectRamasPorEquipo,
+        selectCategoriasPorEquipo
     };
 };

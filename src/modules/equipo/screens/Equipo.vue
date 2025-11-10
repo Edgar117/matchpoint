@@ -8,6 +8,8 @@
         <AsignacionEquipos
             v-model="showBottomAsignacionJugadores"
             :equipo-nombre="fields.nombre"
+            :equipo-id="fields.equipoId"
+            :torneo-id="fields.torneoId"
         ></AsignacionEquipos>
         <CCustomPagination
             v-model:page="page"

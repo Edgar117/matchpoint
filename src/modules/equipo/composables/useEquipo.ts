@@ -15,7 +15,9 @@ const {
     deleteEquipo,
     selectEquipo,
     selectCategoriasEquipos,
-    selImagenEquipo
+    selImagenEquipo,
+    selectRamasPorEquipo,
+    selectCategoriasPorEquipo,
 } = useEquipoService();
 
 export const useEquipo = () => {
@@ -270,6 +272,8 @@ export const useEquipo = () => {
         createEquipo,
         handleShowAsignacionJugadores,
         selectCategoriasEquipos,
-        selImagenEquipo
+        selImagenEquipo,
+        selectRamasPorEquipo,
+        selectCategoriasPorEquipo,
     };
 };
