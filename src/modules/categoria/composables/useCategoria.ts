@@ -73,6 +73,7 @@ export const useCategoria = () => {
             categoriaId: item.categoriaId,
             descripcion: item.descripcion,
             tipoDeporteId: item.tipoDeporteId ?? null,
+            tipoDeporte: item.tipoDeporte ?? null,
         };
     };
 
@@ -82,6 +83,7 @@ export const useCategoria = () => {
             categoriaId: 0,
             descripcion: "",
             tipoDeporteId: null,
+            tipoDeporte: null,
         };
     };
     const resetFields_filter = () => {
@@ -102,6 +104,7 @@ export const useCategoria = () => {
             sortColumn:
                 sortBy.value.length > 0 ? sortBy.value[0].key : "categoriaId",
             SortDir: sortBy.value.length > 0 ? sortBy.value[0].order : "asc",
+            tipoDeporte: null,
         };
     };
 
