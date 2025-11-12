@@ -34,6 +34,15 @@
                     counter="50"
                 ></v-text-field>
             </Field>
+
+            <v-autocomplete
+                label="Tipo de Deporte"
+                :items="TipoTorneos"
+                variant="underlined"
+                item-value="tipoTorneoId"
+                item-title="tipoTorneo"
+                v-model="fields.tipoDeporteId"
+            ></v-autocomplete>
         </div>
         <!-- <template v-slot:actions> -->
         <div class="flex justify-end mr-1 py-2 gap-2">
@@ -52,6 +61,7 @@
 <script lang="ts" setup>
 import { useCategoria } from "../composables/useCategoria";
 import { Field, useForm } from "vee-validate";
+import { onMounted, ref } from "vue";
 import { CButton } from "@core/index";
 
 const { meta } = useForm();
@@ -65,5 +75,11 @@ const props = withDefaults(defineProps<IProps>(), {
     closeModal: () => {},
 });
 
-const { fields, handleSave } = useCategoria();
+const TipoTorneos = ref<any[]>([]); // Inicializar como array vacío
+
+const { fields, handleSave, selectTypeTorneo } = useCategoria();
+
+onMounted(async () => {
+    TipoTorneos.value = await selectTypeTorneo();
+});
 </script>

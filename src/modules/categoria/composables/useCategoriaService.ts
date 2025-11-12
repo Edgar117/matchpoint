@@ -5,6 +5,7 @@ import { URLS } from "@/helpers/constants";
 import { buildParams } from "@/modules/login/helpers/axiosHelper";
 import { useTemplateUI } from "@/store/templateUI";
 import { Categoria, CategorianRequestParams } from "@/interfaces/Categoria";
+import { TipoTorneo } from "@/interfaces/Torneo";
 
 /**
  * A composable function that provides categoria service methods.
@@ -129,10 +130,30 @@ export const useCategoriaService = () => {
         }
     };
 
+    const selectTypeTorneo = async () => {
+        try {
+            const { data } = await axios.get<{
+                data: TipoTorneo[];
+                totalCount: number;
+            }>(
+                `${URLS.COTBUILDER}/api/TipoTorneo?SortColumn=TipoTorneoId&Offset=0&Next_Rows=100&SortDirection=ASC`
+            );
+            return data.data;
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Something went wrong, contact the system administrator`,
+                type: "error",
+                valueModel: true,
+            });
+            return [];
+        }
+    };
+
     return {
         createCategoria,
         selectCategoria,
         updateCategoria,
         deleteCategoria,
+        selectTypeTorneo,
     };
 };

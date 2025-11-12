@@ -9,7 +9,7 @@ import { useCategoriaService } from "./useCategoriaService";
 import { useCategoriaStore } from "../store/state";
 import { SortItem } from "@/interfaces/DataTables";
 import { getLocation } from "@/helpers/tools";
-const { createCategoria, updateCategoria, deleteCategoria, selectCategoria } =
+const { createCategoria, updateCategoria, deleteCategoria, selectCategoria, selectTypeTorneo } =
     useCategoriaService();
 
 export const useCategoria = () => {
@@ -72,6 +72,7 @@ export const useCategoria = () => {
             categoria: item.categoria,
             categoriaId: item.categoriaId,
             descripcion: item.descripcion,
+            tipoDeporteId: item.tipoDeporteId ?? null,
         };
     };
 
@@ -80,6 +81,7 @@ export const useCategoria = () => {
             categoria: "",
             categoriaId: 0,
             descripcion: "",
+            tipoDeporteId: null,
         };
     };
     const resetFields_filter = () => {
@@ -95,6 +97,7 @@ export const useCategoria = () => {
             categoria: fieldsFilter.value.categoria,
             descripcion: fieldsFilter.value.descripcion,
             Limit: elementPerPage.value,
+            tipoDeporteId: null,
             Offset: (page.value - 1) * elementPerPage.value,
             sortColumn:
                 sortBy.value.length > 0 ? sortBy.value[0].key : "categoriaId",
@@ -195,5 +198,6 @@ export const useCategoria = () => {
         closeModalAsignaciones,
         selectCategoria,
         createCategoria,
+        selectTypeTorneo,
     };
 };

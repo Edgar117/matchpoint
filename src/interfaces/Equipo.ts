@@ -15,6 +15,8 @@ export interface Equipo {
     esRamaFemenil: boolean;
     esRamaMixto: boolean;
     categorias: number[] | null;
+    tipoDeporteId: number | null;
+    tipoDeporte: string | null;
 }
 
 export interface EquiponRequestParams extends Equipo {

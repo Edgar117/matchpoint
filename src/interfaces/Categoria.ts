@@ -2,6 +2,7 @@ export interface Categoria {
     categoriaId: number;
     categoria: string;
     descripcion: string;
+    tipoDeporteId: number | null;
 }
 
 export interface CategorianRequestParams extends Categoria {

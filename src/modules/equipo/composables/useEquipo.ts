@@ -18,6 +18,7 @@ const {
     selImagenEquipo,
     selectRamasPorEquipo,
     selectCategoriasPorEquipo,
+    selectTypeTorneo,
 } = useEquipoService();
 
 export const useEquipo = () => {
@@ -98,6 +99,8 @@ export const useEquipo = () => {
             esRamaMixto: item.esRamaMixto,
             esRamaVaronil: item.esRamaVaronil,
             extensionImg: item.extensionImg,
+            tipoDeporteId: item.tipoDeporteId,
+            tipoDeporte: item.tipoDeporte,
         };
     };
 
@@ -118,6 +121,8 @@ export const useEquipo = () => {
             esRamaMixto: false,
             esRamaVaronil: false,
             extensionImg: "",
+            tipoDeporteId: null,
+            tipoDeporte: null,
         };
     };
     const resetFields_filter = () => {
@@ -145,6 +150,8 @@ export const useEquipo = () => {
             esRamaVaronil: false,
             extensionImg: "",
             descripcion: fieldsFilter.value.descripcion,
+            tipoDeporteId: null,
+            tipoDeporte: null,
             Limit: elementPerPage.value,
             Offset: (page.value - 1) * elementPerPage.value,
             sortColumn:
@@ -169,6 +176,12 @@ export const useEquipo = () => {
     //Computed
     const headers = computed(() => {
         return [
+            {
+                title: "Tipo de Deporte",
+                key: "tipoDeporte",
+                sortable: !showFilter.value,
+                width: "250px",
+            },
             {
                 title: "Equipo",
                 key: "nombre",
@@ -275,5 +288,6 @@ export const useEquipo = () => {
         selImagenEquipo,
         selectRamasPorEquipo,
         selectCategoriasPorEquipo,
+        selectTypeTorneo,
     };
 };

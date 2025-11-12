@@ -1,7 +1,7 @@
 <template>
     <div class="py-4 h-full flex flex-col justify-between">
         <div>
-            <!-- {{ fields }} -->
+             
             <Field
                 name="nombre"
                 v-model="fields.nombre"
@@ -119,6 +119,16 @@
                     counter="100"
                 ></v-text-field>
             </Field>
+
+            <v-autocomplete
+                label="Tipo de Deporte"
+                :items="TipoTorneos"
+                variant="underlined"
+                item-value="tipoTorneoId"
+                item-title="tipoTorneo"
+                v-model="tipoDeporteSeleccionado"
+                @update:model-value="handleTipoDeporteChange"
+            ></v-autocomplete>
             
             <v-autocomplete
                 label="Categorías"
@@ -172,7 +182,7 @@
 import { useEquipo } from "../composables/useEquipo";
 import { Field, useForm } from "vee-validate";
 import { CButton, CFileUploader } from "@core/index";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 
 const { meta } = useForm();
 
@@ -194,13 +204,56 @@ const archivoLoaded = ref<{ base64?: string; name?: string; type?: string }>(
     {}
 );
 
-const { fields, handleSave, selectCategoriasEquipos, selImagenEquipo } =
+const { fields, handleSave, selectCategoriasEquipos, selImagenEquipo, selectTypeTorneo } =
     useEquipo();
 
 const Categorias = ref<any[]>([]);
+const TipoTorneos = ref<any[]>([]); // Inicializar como array vacío
+
+// Variable local para el combo de tipo de deporte
+const tipoDeporteSeleccionado = ref<number | null>(null);
+
+// Función para manejar el cambio de tipo de deporte
+const handleTipoDeporteChange = async (value: number | null) => {
+    // Actualizar fields.tipoDeporteId con el valor seleccionado
+    fields.value.tipoDeporteId = value;
+    
+    // Limpiar las categorías seleccionadas cuando cambia el tipo de deporte
+    fields.value.categorias = [];
+    
+    // Recargar las categorías según el tipo de deporte seleccionado
+    if (value) {
+        Categorias.value = await selectCategoriasEquipos(value);
+    } else {
+        Categorias.value = [];
+    }
+};
+
+// Watcher para sincronizar cuando fields.tipoDeporteId cambie externamente
+watch(
+    () => fields.value.tipoDeporteId,
+    (newValue) => {
+        if (newValue !== tipoDeporteSeleccionado.value) {
+            tipoDeporteSeleccionado.value = newValue;
+        }
+    },
+    { immediate: true }
+);
 
 onMounted(async () => {
-    Categorias.value = await selectCategoriasEquipos();
+    TipoTorneos.value = await selectTypeTorneo();
+    
+    // Si fields.tipoDeporteId no viene, inicializar con null
+    // Si viene, usar ese valor
+    tipoDeporteSeleccionado.value = fields.value.tipoDeporteId ?? null;
+    
+    // Si hay un tipoDeporteId, cargar las categorías correspondientes
+    if (fields.value.tipoDeporteId) {
+        Categorias.value = await selectCategoriasEquipos(fields.value.tipoDeporteId);
+    } else {
+        Categorias.value = [];
+    }
+    
     if (fields.value.equipoId) {
         // vamos a buscar la imagen
         const baseImagen = await selImagenEquipo(

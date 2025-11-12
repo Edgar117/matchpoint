@@ -124,6 +124,7 @@
                     </div>
 
                     <div class="p-6">
+                    
                         <PlayerForm
                             v-if="activeTab === 'create'"
                             :equipo-id="props.equipoId"
@@ -321,11 +322,6 @@ const mapJugadorToPlayer = (jugador: Jugador): Player => {
 };
 
 const loadCatalogs = async () => {
-    if (!props.equipoId || !props.torneoId) {
-        categorias.value = [];
-        ramas.value = [];
-        return;
-    }
     loadingCatalogs.value = true;
     try {
         const [ramasResponse, categoriasResponse] = await Promise.all([
