@@ -122,10 +122,14 @@ export const useCategoria = () => {
     const headers = computed(() => {
         return [
             {
+                title: "Tipo de deporte",
+                key: "tipoDeporte",
+                sortable: !showFilter.value,
+            },
+            {
                 title: "Categoria",
                 key: "categoria",
                 sortable: !showFilter.value,
-                width: "250px",
             },
             {
                 title: "Descripcion",
