@@ -74,21 +74,6 @@
         </div>
 
         <div>
-          <label for="numero" class="block text-sm font-medium text-slate-700 mb-2">
-            Número de Camiseta
-          </label>
-          <input
-            id="numero"
-            v-model.number="form.numero"
-            type="number"
-            required
-            min="0"
-            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            placeholder="Ej: 10"
-          />
-        </div>
-
-        <div>
           <label for="posicion" class="block text-sm font-medium text-slate-700 mb-2">
             Posición
           </label>
@@ -99,8 +84,12 @@
             class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           >
             <option value="">Seleccionar posición</option>
-            <option v-for="posicion in POSICIONES" :key="posicion.id" :value="posicion.id">
-              {{ posicion.label }}
+            <option 
+              v-for="posicion in posiciones" 
+              :key="posicion.posicionTipoTorneoId" 
+              :value="posicion.posicionTipoTorneoId"
+            >
+              {{ posicion.posicion }} - {{ posicion.descripcion }}
             </option>
           </select>
         </div>
@@ -121,26 +110,94 @@
             </option>
           </select>
         </div>
+      </div>
 
-        <div>
-          <label for="categoria" class="block text-sm font-medium text-slate-700 mb-2">
-            Categoría
-          </label>
-          <select
-            id="categoria"
-            v-model.number="form.categoriaId"
-            required
-            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          >
-            <option value="">Seleccionar categoría</option>
-            <option
-              v-for="categoria in filteredCategorias"
-              :key="categoria.categoriaId"
-              :value="categoria.categoriaId"
+      <!-- Sección de Categorías y Números de Camiseta -->
+      <div class="mt-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <label class="block text-sm font-medium text-slate-700">
+              Categorías y Números de Camiseta
+            </label>
+            <span
+              v-if="form.categoriaAssignments.length > 0"
+              class="px-2.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold"
             >
-              {{ categoria.categoria }}
-            </option>
-          </select>
+              {{ form.categoriaAssignments.length }}
+            </span>
+          </div>
+          <button
+            type="button"
+            @click="addCategoriaAssignment"
+            :disabled="!form.ramaId || filteredCategorias.length === 0"
+            class="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Plus class="w-4 h-4" />
+            Agregar Categoría
+          </button>
+        </div>
+
+        <div v-if="form.categoriaAssignments.length === 0" class="text-center py-8 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50">
+          <p class="text-slate-500 text-sm">
+            No hay categorías asignadas. Haz clic en "Agregar Categoría" para comenzar.
+          </p>
+        </div>
+
+        <div v-else class="space-y-3">
+          <div
+            v-for="(assignment, index) in form.categoriaAssignments"
+            :key="assignment.id"
+            class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+              <div class="md:col-span-5">
+                <label class="block text-xs font-medium text-slate-600 mb-2">
+                  Categoría
+                </label>
+                <select
+                  v-model.number="assignment.categoriaId"
+                  required
+                  @change="onCategoriaChange(index)"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="">Seleccionar categoría</option>
+                  <option
+                    v-for="categoria in availableCategoriasForAssignment(index)"
+                    :key="categoria.categoriaId"
+                    :value="categoria.categoriaId"
+                  >
+                    {{ categoria.categoria }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="md:col-span-4">
+                <label class="block text-xs font-medium text-slate-600 mb-2">
+                  Número de Camiseta
+                </label>
+                <input
+                  v-model.number="assignment.num"
+                  type="number"
+                  required
+                  min="0"
+                  max="99"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Ej: 10"
+                />
+              </div>
+
+              <div class="md:col-span-3 flex gap-2">
+                <button
+                  type="button"
+                  @click="removeCategoriaAssignment(index)"
+                  class="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
+                >
+                  <Trash2 class="w-4 h-4" />
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -173,21 +230,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
-import { UserPlus } from 'lucide-vue-next'
+import { computed, reactive, watch, ref } from 'vue'
+import { UserPlus, Plus, Trash2 } from 'lucide-vue-next'
 import { CFileUploader } from '@core/index'
 import type { CategoriaEquipo, JugadorRequest, RamaEquipo } from '@/interfaces/Jugador'
-
-const POSICIONES = [
-  { id: 1, label: 'Portero' },
-  { id: 2, label: 'Defensa' },
-  { id: 3, label: 'Mediocampista' },
-  { id: 4, label: 'Delantero' }
-] as const
+import { useEquipoService } from '../composables/useEquipoService'
 
 interface Props {
   equipoId?: number
   torneoId?: number | null
+  tipoDeporteId?: number | null
   ramas: RamaEquipo[]
   categorias: CategoriaEquipo[]
   isSaving?: boolean
@@ -196,6 +248,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   equipoId: 0,
   torneoId: null,
+  tipoDeporteId: null,
   ramas: () => [],
   categorias: () => [],
   isSaving: false
@@ -205,19 +258,26 @@ const emit = defineEmits<{
   submit: [payload: JugadorRequest]
 }>()
 
+interface CategoriaAssignment {
+  id: string
+  categoriaId: number | null
+  num: number | null
+}
+
 interface FormState {
   nombre: string
   apellidoPaterno: string
   apellidoMaterno: string
   curp: string
   fechaNacimiento: string
-  numero: number | null
   posicionTipoTorneoId: number | null
   ramaId: number | null
-  categoriaId: number | null
+  categoriaAssignments: CategoriaAssignment[]
   logo?: string
   extensionImg?: string
 }
+
+let assignmentIdCounter = 0
 
 const form = reactive<FormState>({
   nombre: '',
@@ -225,13 +285,45 @@ const form = reactive<FormState>({
   apellidoMaterno: '',
   curp: '',
   fechaNacimiento: '',
-  numero: null,
   posicionTipoTorneoId: null,
   ramaId: null,
-  categoriaId: null,
+  categoriaAssignments: [],
   logo: '',
   extensionImg: ''
 })
+
+// Servicio para posiciones
+const { selectPosicionesTipoTorneo } = useEquipoService()
+
+const posiciones = ref<Array<{
+  posicionTipoTorneoId: number;
+  tipoTorneoId: number;
+  tipoTorneo: string;
+  posicion: string;
+  descripcion: string;
+}>>([])
+
+// Función para cargar posiciones
+const loadPosiciones = async () => {
+  if (props.tipoDeporteId) {
+    posiciones.value = await selectPosicionesTipoTorneo(props.tipoDeporteId)
+  } else {
+    posiciones.value = []
+    form.posicionTipoTorneoId = null
+  }
+}
+
+// Watcher para cargar posiciones cuando cambie tipoDeporteId
+watch(
+  () => props.tipoDeporteId,
+  async (newValue) => {
+    await loadPosiciones()
+    if (form.posicionTipoTorneoId !== null) {
+      form.posicionTipoTorneoId = null
+    }
+  },
+  { immediate: true }
+)
 
 const filteredCategorias = computed(() => {
   if (!form.ramaId) return props.categorias
@@ -240,32 +332,70 @@ const filteredCategorias = computed(() => {
   )
 })
 
+// Obtener categorías disponibles para una asignación específica
+// (excluyendo las que ya están seleccionadas en otras asignaciones, pero incluyendo la actual)
+const availableCategoriasForAssignment = (currentIndex: number) => {
+  const currentAssignment = form.categoriaAssignments[currentIndex]
+  const selectedCategoriaIds = form.categoriaAssignments
+    .map((assignment, index) => index !== currentIndex ? assignment.categoriaId : null)
+    .filter((id): id is number => id !== null)
+  
+  return filteredCategorias.value.filter(
+    (categoria) => 
+      !selectedCategoriaIds.includes(categoria.categoriaId) ||
+      categoria.categoriaId === currentAssignment?.categoriaId
+  )
+}
+
+// Agregar una nueva asignación de categoría
+const addCategoriaAssignment = () => {
+  if (!form.ramaId) return
+  
+  form.categoriaAssignments.push({
+    id: `assignment-${++assignmentIdCounter}`,
+    categoriaId: null,
+    num: null
+  })
+}
+
+// Eliminar una asignación de categoría
+const removeCategoriaAssignment = (index: number) => {
+  form.categoriaAssignments.splice(index, 1)
+}
+
+// Manejar cambio de categoría
+const onCategoriaChange = (index: number) => {
+  // Si se selecciona una categoría, asegurar que tenga un número
+  const assignment = form.categoriaAssignments[index]
+  if (assignment.categoriaId && assignment.num === null) {
+    assignment.num = 0
+  }
+}
+
+// Limpiar asignaciones cuando cambia la rama
 watch(
   () => form.ramaId,
   () => {
-    if (
-      form.categoriaId &&
-      !filteredCategorias.value.some(
-        (categoria) => categoria.categoriaId === form.categoriaId
-      )
-    ) {
-      form.categoriaId = null
-    }
+    // Limpiar todas las asignaciones cuando cambia la rama
+    form.categoriaAssignments = []
   }
 )
 
 const canSubmit = computed(() => {
-  return (
-    Boolean(props.equipoId) &&
+  const hasBasicFields = Boolean(props.equipoId) &&
     !!form.nombre &&
     !!form.apellidoPaterno &&
     !!form.curp &&
     !!form.fechaNacimiento &&
-    form.numero !== null &&
     form.posicionTipoTorneoId !== null &&
-    form.ramaId !== null &&
-    form.categoriaId !== null
-  )
+    form.ramaId !== null
+
+  const hasValidAssignments = form.categoriaAssignments.length > 0 &&
+    form.categoriaAssignments.every(
+      (assignment) => assignment.categoriaId !== null && assignment.num !== null && assignment.num >= 0
+    )
+
+  return hasBasicFields && hasValidAssignments
 })
 
 const buildFechaIso = (value: string) => {
@@ -278,6 +408,18 @@ const buildFechaIso = (value: string) => {
 const handleSubmit = () => {
   if (!canSubmit.value || !props.equipoId) return
 
+  // Crear un array de equipoJugador para cada asignación de categoría
+  const equipoJugadorArray = form.categoriaAssignments
+    .filter((assignment) => assignment.categoriaId !== null && assignment.num !== null)
+    .map((assignment) => ({
+      equipoJugadorId: 0,
+      ramaId: form.ramaId ?? 0,
+      categoriaId: assignment.categoriaId ?? 0,
+      posicionTipoTorneoId: form.posicionTipoTorneoId ?? 0,
+      num: assignment.num ?? 0,
+      jugador: `${form.nombre} ${form.apellidoPaterno} ${form.apellidoMaterno ?? ''}`.trim()
+    }))
+
   const payload: JugadorRequest = {
     equipoId: props.equipoId,
     jugadorId: 0,
@@ -288,16 +430,7 @@ const handleSubmit = () => {
     fechaNacimiento: buildFechaIso(form.fechaNacimiento),
     curp: form.curp,
     extensionImg: form.extensionImg ?? '',
-    equipoJugador: [
-      {
-        equipoJugadorId: 0,
-        ramaId: form.ramaId ?? 0,
-        categoriaId: form.categoriaId ?? 0,
-        posicionTipoTorneoId: form.posicionTipoTorneoId ?? 0,
-        num: form.numero ?? 0,
-        jugador: `${form.nombre} ${form.apellidoPaterno} ${form.apellidoMaterno ?? ''}`.trim()
-      }
-    ]
+    equipoJugador: equipoJugadorArray
   }
 
   emit('submit', payload)
@@ -310,12 +443,12 @@ const resetForm = () => {
   form.apellidoMaterno = ''
   form.curp = ''
   form.fechaNacimiento = ''
-  form.numero = null
   form.posicionTipoTorneoId = null
   form.ramaId = null
-  form.categoriaId = null
+  form.categoriaAssignments = []
   form.logo = ''
   form.extensionImg = ''
+  assignmentIdCounter = 0
 }
 
 const handleFileUpload = (fileData: any) => {

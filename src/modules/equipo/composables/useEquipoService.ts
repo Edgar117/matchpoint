@@ -8,6 +8,7 @@ import { Equipo, EquiponRequestParams } from "@/interfaces/Equipo";
 import { Categoria } from "@/interfaces/Categoria";
 import { CategoriaEquipo, RamaEquipo } from "@/interfaces/Jugador";
 import { TipoTorneo } from "@/interfaces/Torneo";
+import { Empresa } from "@/interfaces/Empresa";
 
 /**
  * A composable function that provides equipo service methods.
@@ -35,7 +36,7 @@ export const useEquipoService = () => {
             );
 
             const payload = {
-                empresaId: 0,
+                empresaId: equipoData.empresaId ?? 0,
                 equipoId: equipoData.equipoId || 0,
                 nombre: equipoData.nombre,
                 descripcion: equipoData.descripcion,
@@ -91,7 +92,7 @@ export const useEquipoService = () => {
             );
 
             const payload = {
-                empresaId: 0,
+                empresaId: equipoData.empresaId ?? 0,
                 equipoId: equipoData.equipoId || 0,
                 nombre: equipoData.nombre,
                 descripcion: equipoData.descripcion,
@@ -204,6 +205,7 @@ export const useEquipoService = () => {
                     categorias,
                     tipoDeporteId: item.tipoDeporteId ?? null,
                     tipoDeporte: item.tipoDeporte ?? null,
+                    empresaId: item.empresaId ?? null,
                 };
             });
 
@@ -255,7 +257,7 @@ export const useEquipoService = () => {
                     params: {
                         TorneoId: torneoId,
                         EquipoId: equipoId,
-                        SortColumn: "torneoId",
+                        SortColumn: "categoriaId",
                         Offset: offset,
                         Next_Rows: nextRows,
                         SortDirection: "asc",
@@ -315,7 +317,7 @@ export const useEquipoService = () => {
                     params: {
                         TorneoId: torneoId,
                         EquipoId: equipoId,
-                        SortColumn: "torneoId",
+                        SortColumn: "categoriaId",
                         Offset: offset,
                         Next_Rows: nextRows,
                         SortDirection: "asc",
@@ -404,6 +406,66 @@ export const useEquipoService = () => {
         }
     };
 
+    const selectPosicionesTipoTorneo = async (
+        tipoTorneoId: number | null,
+        offset = 0,
+        nextRows = 100
+    ) => {
+        try {
+            if (!tipoTorneoId) {
+                return [];
+            }
+            const { data } = await axios.get<{
+                data: Array<{
+                    posicionTipoTorneoId: number;
+                    tipoTorneoId: number;
+                    tipoTorneo: string;
+                    posicion: string;
+                    descripcion: string;
+                }>;
+                totalCount: number;
+            }>(
+                `${URLS.COTBUILDER}/api/PosicionTipoTorneo`,
+                {
+                    params: {
+                        TipoTorneoId: tipoTorneoId,
+                        SortColumn: "posicionTipoTorneoId",
+                        Offset: offset,
+                        Next_Rows: nextRows,
+                        SortDirection: "ASC",
+                    },
+                }
+            );
+            return data.data;
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Something went wrong, contact the system administrator`,
+                type: "error",
+                valueModel: true,
+            });
+            return [];
+        }
+    };
+
+    const selectEmpresaTorneo = async () => {
+        try {
+            const { data } = await axios.get<{
+                data: Empresa[];
+                totalCount: number;
+            }>(
+                `${URLS.COTBUILDER}/api/Empresa?SortColumn=empresaId&Offset=0&Next_Rows=100&SortDirection=ASC`
+            );
+            return data.data;
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Something went wrong, contact the system administrator`,
+                type: "error",
+                valueModel: true,
+            });
+            return [];
+        }
+    };
+
     return {
         createEquipo,
         selectEquipo,
@@ -414,5 +476,7 @@ export const useEquipoService = () => {
         selectRamasPorEquipo,
         selectCategoriasPorEquipo,
         selectTypeTorneo,
+        selectPosicionesTipoTorneo,
+        selectEmpresaTorneo,
     };
 };

@@ -103,11 +103,26 @@
                 </template>
 
                 <template v-slot:[`item.logo`]="{ item }">
-                    <div class="flex gap-1">
+                    <div class="flex gap-1 items-center justify-center">
+                        <div
+                            v-if="!item.logo || logoErrors[item.equipoId]"
+                            class="w-[50px] h-[50px] rounded flex items-center justify-center bg-slate-100 border border-slate-200"
+                        >
+                            <v-icon
+                                size="24"
+                                color="grey-darken-1"
+                            >
+                                mdi-image-off-outline
+                            </v-icon>
+                        </div>
                         <img
+                            v-else
                             width="50"
                             height="50"
+                            class="object-cover rounded"
                             :src="`${URLS.COTBUILDER}/api/Equipo/logo/${item.equipoId}/${item.logo}`"
+                            @error="handleImageError(item.equipoId)"
+                            @load="handleImageLoad(item.equipoId)"
                         />
                     </div>
                 </template>
@@ -178,6 +193,7 @@
     </div>
 </template>
 <script setup lang="ts">
+import { ref } from "vue";
 //COT-UI-LIB
 import { CBottomSheet, CButton, CConfirmationDialog } from "@core/index";
 import { useEquipo } from "../composables/useEquipo";
@@ -220,4 +236,15 @@ const {
     handleShowAsignacionJugadores,
     showFilterAction,
 } = useEquipo();
+
+// Manejo de errores de imagen
+const logoErrors = ref<Record<number, boolean>>({});
+
+const handleImageError = (equipoId: number) => {
+    logoErrors.value[equipoId] = true;
+};
+
+const handleImageLoad = (equipoId: number) => {
+    logoErrors.value[equipoId] = false;
+};
 </script>

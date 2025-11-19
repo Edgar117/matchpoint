@@ -129,6 +129,7 @@
                             v-if="activeTab === 'create'"
                             :equipo-id="props.equipoId"
                             :torneo-id="props.torneoId"
+                            :tipo-deporte-id="tipoDeporteId"
                             :ramas="ramas"
                             :categorias="categorias"
                             :is-saving="savingPlayer"
@@ -138,6 +139,8 @@
                             v-if="activeTab === 'list'"
                             :players="players"
                             :is-loading="loadingPlayers"
+                            :ramas="ramas"
+                            :categorias="categorias"
                             @delete-player="handleDeletePlayer"
                         />
                         <TeamAssignment
@@ -169,11 +172,14 @@ import PlayerList from "./PlayerList.vue";
 import TeamAssignment from "./TeamAssignment.vue";
 import { useEquipoService } from "../composables/useEquipoService";
 import { useJugadorService } from "../composables/useJugadorService";
+import { useEquipoStore } from "../store/state";
+import { storeToRefs } from "pinia";
 import type {
     CategoriaEquipo,
     Jugador,
     JugadorRequest,
     RamaEquipo,
+    EquipoJugadorAsignacion,
 } from "@/interfaces/Jugador";
 
 interface IProps {
@@ -205,14 +211,10 @@ interface Player {
     id: string;
     jugadorId: number;
     name: string;
-    number: number | null;
     age: number | null;
-    categoriaId?: number | null;
-    categoriaNombre?: string;
-    ramaId?: number | null;
-    ramaNombre?: string;
     curp?: string;
     fechaNacimiento?: string | null;
+    equipoJugador: EquipoJugadorAsignacion[]; // Todas las asignaciones del jugador
 }
 
 interface Team {
@@ -227,13 +229,16 @@ const activeTab = ref<"create" | "list" | "assign">("create");
 const tabs = [
     { id: "create" as const, label: "Crear Jugador", icon: UserPlus },
     { id: "list" as const, label: "Lista de Jugadores", icon: List },
-    { id: "assign" as const, label: "Asignar a Categoria", icon: UsersRound },
 ];
 
 const { selectCategoriasPorEquipo, selectRamasPorEquipo } =
     useEquipoService();
 const { fetchJugadores, createJugador, updateJugador, deleteJugador } =
     useJugadorService();
+
+// Agregar esto para obtener tipoDeporteId del store
+const { fields } = storeToRefs(useEquipoStore());
+const tipoDeporteId = computed(() => fields.value.tipoDeporteId);
 
 const categorias = ref<CategoriaEquipo[]>([]);
 const ramas = ref<RamaEquipo[]>([]);
@@ -260,23 +265,21 @@ const teams = computed<Team[]>(() => {
 });
 
 const assignedPlayersCount = computed(() =>
-    players.value.filter((player) => player.categoriaId && player.ramaId).length
+    players.value.filter((player) => player.equipoJugador && player.equipoJugador.length > 0).length
 );
 
 const categoriaNameById = (categoriaId?: number | null) => {
-    if (!categoriaId) return "";
-    return (
-        categorias.value.find(
-            (categoria) => categoria.categoriaId === categoriaId
-        )?.categoria ?? ""
+    if (!categoriaId || categoriaId === 0) return "";
+    const categoria = categorias.value.find(
+        (c) => c.categoriaId === categoriaId
     );
+    return categoria?.categoria ?? "";
 };
 
 const ramaNameById = (ramaId?: number | null) => {
-    if (!ramaId) return "";
-    return (
-        ramas.value.find((rama) => rama.ramaId === ramaId)?.nombre ?? ""
-    );
+    if (!ramaId || ramaId === 0) return "";
+    const rama = ramas.value.find((r) => r.ramaId === ramaId);
+    return rama?.nombre ?? "";
 };
 
 const calculateAge = (isoDate?: string | null) => {
@@ -296,32 +299,37 @@ const calculateAge = (isoDate?: string | null) => {
 };
 
 const mapJugadorToPlayer = (jugador: Jugador): Player => {
-    const primaryAssignment = jugador.equipoJugador?.[0];
     const fullName = [jugador.nombre, jugador.apellidoPaterno, jugador.apellidoMaterno]
         .filter(Boolean)
         .join(" ")
         .trim();
 
-    const categoriaId = primaryAssignment?.categoriaId ?? null;
-    const ramaId = primaryAssignment?.ramaId ?? null;
+    // Enriquecer las asignaciones con nombres de categoría y rama si no los tienen
+    const enrichedAsignaciones: EquipoJugadorAsignacion[] = 
+        (jugador.equipoJugador || []).map((asignacion) => ({
+            ...asignacion,
+            categoriaNombre: asignacion.categoriaNombre ?? categoriaNameById(asignacion.categoriaId),
+            ramaNombre: asignacion.ramaNombre ?? ramaNameById(asignacion.ramaId),
+        }));
 
+    // Retornar un solo registro por jugador con todas sus asignaciones
     return {
-        id: jugador.jugadorId.toString(),
+        id: `jugador-${jugador.jugadorId}`,
         jugadorId: jugador.jugadorId,
         name: fullName || jugador.nombre,
-        number: primaryAssignment?.num ?? null,
         age: calculateAge(jugador.fechaNacimiento),
-        categoriaId,
-        ramaId,
-        categoriaNombre:
-            primaryAssignment?.categoriaNombre ?? categoriaNameById(categoriaId),
-        ramaNombre: primaryAssignment?.ramaNombre ?? ramaNameById(ramaId),
         curp: jugador.curp,
         fechaNacimiento: jugador.fechaNacimiento,
+        equipoJugador: enrichedAsignaciones,
     };
 };
 
 const loadCatalogs = async () => {
+    if (!props.equipoId) {
+        categorias.value = [];
+        ramas.value = [];
+        return;
+    }
     loadingCatalogs.value = true;
     try {
         const [ramasResponse, categoriasResponse] = await Promise.all([
@@ -348,19 +356,24 @@ const loadPlayers = async () => {
             torneoId: props.torneoId ?? undefined,
         });
         rawPlayers.value = response;
+        // Mapear cada jugador a un solo registro (no expandir por asignaciones)
         players.value = response.map(mapJugadorToPlayer);
     } finally {
         loadingPlayers.value = false;
     }
 };
 
+// Cambiar el watcher para cargar cuando se abre el diálogo
 watch(
-    () => [props.equipoId, props.torneoId],
-    async () => {
-        await loadCatalogs();
-        await loadPlayers();
+    () => modelValue.value,
+    async (isOpen) => {
+        if (isOpen) {
+            // Cuando se abre el diálogo, cargar catálogos y jugadores
+            await loadCatalogs();
+            await loadPlayers();
+        }
     },
-    { immediate: true }
+    { immediate: false }
 );
 
 const handlePlayerCreated = async (payload: JugadorRequest) => {

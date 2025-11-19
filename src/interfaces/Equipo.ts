@@ -17,6 +17,7 @@ export interface Equipo {
     categorias: number[] | null;
     tipoDeporteId: number | null;
     tipoDeporte: string | null;
+    empresaId: number | null;
 }
 
 export interface EquiponRequestParams extends Equipo {

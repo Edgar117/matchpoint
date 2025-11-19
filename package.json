@@ -17,6 +17,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@babel/runtime": "^7.28.4",
     "@mdi/font": "7.0.96",
     "@microsoft/signalr": "^7.0.5",
     "@vee-validate/i18n": "^4.10.8",

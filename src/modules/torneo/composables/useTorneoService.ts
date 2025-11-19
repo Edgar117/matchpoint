@@ -155,7 +155,7 @@ export const useTorneoService = () => {
                 data: Empresa[];
                 totalCount: number;
             }>(
-                `${URLS.COTBUILDER}/api/Empresa?SortColumn=EmpresaId&Offset=0&Next_Rows=100&SortDirection=ASC`
+                `${URLS.COTBUILDER}/api/Empresa?SortColumn=empresaId&Offset=0&Next_Rows=100&SortDirection=ASC`
             );
             return data.data;
         } catch (error) {

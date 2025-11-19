@@ -31,9 +31,11 @@
           class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
         >
           <option value="">Elegir jugador...</option>
-          <option v-for="player in players" :key="player.id" :value="player.id">
-            {{ player.name }} - #{{ player.number ?? 'S/N' }}
-            <span v-if="player.ramaNombre">({{ player.ramaNombre }})</span>
+          <option v-for="player in players" :key="player.id" :value="player.jugadorId.toString()">
+            {{ player.name }}
+            <span v-if="player.equipoJugador && player.equipoJugador.length > 0">
+              ({{ player.equipoJugador.length }} asignación{{ player.equipoJugador.length > 1 ? 'es' : '' }})
+            </span>
           </option>
         </select>
       </div>
@@ -79,17 +81,17 @@
         
         <div class="p-4 space-y-3">
           <div
-            v-for="player in getTeamPlayers(team.categoriaId)"
-            :key="player.id"
+            v-for="assignment in getTeamPlayers(team.categoriaId)"
+            :key="`${assignment.player.jugadorId}-${assignment.asignacion.equipoJugadorId}`"
             class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg"
           >
             <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-              {{ player.number }}
+              {{ assignment.asignacion.num || '—' }}
             </div>
             <div class="flex-1">
-              <p class="font-medium text-slate-900 text-sm">{{ player.name }}</p>
+              <p class="font-medium text-slate-900 text-sm">{{ assignment.player.name }}</p>
               <p class="text-xs text-slate-600">
-                {{ player.ramaNombre ? `Rama: ${player.ramaNombre}` : 'Sin rama asignada' }}
+                {{ assignment.asignacion.ramaNombre ? `Rama: ${assignment.asignacion.ramaNombre}` : 'Sin rama asignada' }}
               </p>
             </div>
           </div>
@@ -104,17 +106,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { UserCheck } from 'lucide-vue-next'
+import type { EquipoJugadorAsignacion, RamaEquipo } from '@/interfaces/Jugador'
 
 interface Player {
   id: string
+  jugadorId: number
   name: string
-  number: number | null
-  categoriaId?: number | null
-  categoriaNombre?: string
-  ramaId?: number | null
-  ramaNombre?: string
+  age: number | null
+  curp?: string
+  fechaNacimiento?: string | null
+  equipoJugador: EquipoJugadorAsignacion[]
 }
 
 interface Team {
@@ -124,15 +127,10 @@ interface Team {
   categoriaId: number
 }
 
-interface Rama {
-  ramaId: number
-  nombre: string
-}
-
 const props = defineProps<{
   players: Player[]
   teams: Team[]
-  ramas: Rama[]
+  ramas: RamaEquipo[]
 }>()
 
 const emit = defineEmits<{
@@ -143,8 +141,20 @@ const selectedPlayerId = ref('')
 const selectedTeamId = ref('')
 const selectedRamaId = ref('')
 
+// Retornar jugadores con sus asignaciones para una categoría específica
 const getTeamPlayers = (categoriaId: number) => {
-  return props.players.filter(p => p.categoriaId === categoriaId)
+  const result: Array<{ player: Player; asignacion: EquipoJugadorAsignacion }> = []
+  
+  props.players.forEach(player => {
+    const asignaciones = player.equipoJugador.filter(
+      asignacion => asignacion.categoriaId === categoriaId
+    )
+    asignaciones.forEach(asignacion => {
+      result.push({ player, asignacion })
+    })
+  })
+  
+  return result
 }
 
 const handleAssign = () => {

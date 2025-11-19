@@ -2,6 +2,7 @@
     <div class="py-4 h-full flex flex-col justify-between">
         <div>
             <v-autocomplete
+                v-if="showEmpresaCombo"
                 label="Empresa"
                 :items="Empresas"
                 variant="underlined"
@@ -115,7 +116,8 @@
 <script lang="ts" setup>
 import { useTorneo } from "../composables/useTorneo";
 import { Field, useForm } from "vee-validate";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
+import { getEmpresaIdFromToken } from "@/helpers/tokenHelper";
 
 import { CButton, CFileUploader } from "@core/index";
 
@@ -150,9 +152,18 @@ const {
     selectEmpresaTorneo,
 } = useTorneo();
 
+// Computed para mostrar el combo de empresa solo cuando empresaId del token sea 0
+const showEmpresaCombo = computed(() => {
+    const empresaId = getEmpresaIdFromToken();
+    console.log('empresaId:', empresaId, 'tipo:', typeof empresaId, 'es igual a 0:', empresaId === 0);
+    return empresaId === 0;
+});
+
 onMounted(async () => {
     TipoTorneos.value = await selectTypeTorneo();
-    Empresas.value = await selectEmpresaTorneo();
+    if (showEmpresaCombo.value) {
+        Empresas.value = await selectEmpresaTorneo();
+    }
     if (fields.value.empresaId) {
         // vamos a buscar la imagen
         const baseImagen = await selImagenTorneo(

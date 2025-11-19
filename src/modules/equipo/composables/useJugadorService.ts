@@ -35,44 +35,62 @@ export const useJugadorService = () => {
                 ? source
                 : [];
 
-            return collection.map((item: any): Jugador => ({
-                equipoId: item.equipoId ?? params.equipoId,
-                jugadorId: item.jugadorId ?? item.JugadorId ?? 0,
-                nombre: item.nombre ?? item.Nombre ?? "",
-                apellidoPaterno: item.apellidoPaterno ?? item.ApellidoPaterno ?? "",
-                apellidoMaterno: item.apellidoMaterno ?? item.ApellidoMaterno ?? "",
-                logo: item.logo ?? item.Logo ?? "",
-                fechaNacimiento:
-                    item.fechaNacimiento ?? item.FechaNacimiento ?? null,
-                curp: item.curp ?? item.Curp ?? "",
-                extensionImg: item.extensionImg ?? item.ExtensionImg ?? "",
-                equipoJugador: Array.isArray(item.equipoJugador ?? item.EquipoJugador)
-                    ? (item.equipoJugador ?? item.EquipoJugador).map(
-                          (asignacion: any) => ({
-                              equipoJugadorId:
-                                  asignacion.equipoJugadorId ??
-                                  asignacion.EquipoJugadorId ??
-                                  0,
-                              ramaId: asignacion.ramaId ?? asignacion.RamaId ?? 0,
-                              categoriaId:
-                                  asignacion.categoriaId ?? asignacion.CategoriaId ?? 0,
-                              posicionTipoTorneoId:
-                                  asignacion.posicionTipoTorneoId ??
-                                  asignacion.PosicionTipoTorneoId ??
-                                  0,
-                              num: asignacion.num ?? asignacion.Num ?? 0,
-                              jugador:
-                                  asignacion.jugador ?? asignacion.Jugador ?? "",
-                              ramaNombre:
-                                  asignacion.ramaNombre ?? asignacion.RamaNombre ?? "",
-                              categoriaNombre:
-                                  asignacion.categoriaNombre ??
-                                  asignacion.CategoriaNombre ??
-                                  "",
-                          })
-                      )
-                    : [],
-            }));
+            return collection.map((item: any): Jugador => {
+                // Parsear equipoJugador si viene como string JSON
+                let equipoJugadorArray: any[] = [];
+                
+                if (item.equipoJugador || item.EquipoJugador) {
+                    const equipoJugadorRaw = item.equipoJugador ?? item.EquipoJugador;
+                    
+                    if (typeof equipoJugadorRaw === 'string') {
+                        try {
+                            equipoJugadorArray = JSON.parse(equipoJugadorRaw);
+                        } catch (e) {
+                            console.error('Error parsing equipoJugador:', e);
+                            equipoJugadorArray = [];
+                        }
+                    } else if (Array.isArray(equipoJugadorRaw)) {
+                        equipoJugadorArray = equipoJugadorRaw;
+                    }
+                }
+
+                return {
+                    equipoId: item.equipoId ?? params.equipoId,
+                    jugadorId: item.jugadorId ?? item.JugadorId ?? 0,
+                    nombre: item.nombre ?? item.Nombre ?? "",
+                    apellidoPaterno: item.apellidoPaterno ?? item.ApellidoPaterno ?? "",
+                    apellidoMaterno: item.apellidoMaterno ?? item.ApellidoMaterno ?? "",
+                    logo: item.logo ?? item.Logo ?? "",
+                    fechaNacimiento:
+                        item.fechaNacimiento ?? item.FechaNacimiento ?? null,
+                    curp: item.curp ?? item.Curp ?? "",
+                    extensionImg: item.extensionImg ?? item.ExtensionImg ?? "",
+                    equipoJugador: equipoJugadorArray.map(
+                        (asignacion: any) => ({
+                            equipoJugadorId:
+                                asignacion.equipoJugadorId ??
+                                asignacion.EquipoJugadorId ??
+                                0,
+                            ramaId: asignacion.ramaId ?? asignacion.RamaId ?? 0,
+                            categoriaId:
+                                asignacion.categoriaId ?? asignacion.CategoriaId ?? 0,
+                            posicionTipoTorneoId:
+                                asignacion.posicionTipoTorneoId ??
+                                asignacion.PosicionTipoTorneoId ??
+                                0,
+                            num: asignacion.num ?? asignacion.Num ?? 0,
+                            jugador:
+                                asignacion.jugador ?? asignacion.Jugador ?? "",
+                            ramaNombre:
+                                asignacion.ramaNombre ?? asignacion.RamaNombre ?? "",
+                            categoriaNombre:
+                                asignacion.categoriaNombre ??
+                                asignacion.CategoriaNombre ??
+                                "",
+                        })
+                    ),
+                };
+            });
         } catch (error) {
             handleShowSnackbar({
                 text: `No fue posible obtener los jugadores, intente nuevamente`,

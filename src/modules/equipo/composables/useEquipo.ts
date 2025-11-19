@@ -19,6 +19,7 @@ const {
     selectRamasPorEquipo,
     selectCategoriasPorEquipo,
     selectTypeTorneo,
+    selectEmpresaTorneo,
 } = useEquipoService();
 
 export const useEquipo = () => {
@@ -101,6 +102,7 @@ export const useEquipo = () => {
             extensionImg: item.extensionImg,
             tipoDeporteId: item.tipoDeporteId,
             tipoDeporte: item.tipoDeporte,
+            empresaId: item.empresaId ?? null,
         };
     };
 
@@ -123,6 +125,7 @@ export const useEquipo = () => {
             extensionImg: "",
             tipoDeporteId: null,
             tipoDeporte: null,
+            empresaId: null,
         };
     };
     const resetFields_filter = () => {
@@ -289,5 +292,6 @@ export const useEquipo = () => {
         selectRamasPorEquipo,
         selectCategoriasPorEquipo,
         selectTypeTorneo,
+        selectEmpresaTorneo,
     };
 };

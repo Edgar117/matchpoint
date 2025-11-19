@@ -1,6 +1,15 @@
 <template>
     <div class="py-4 h-full flex flex-col justify-between">
         <div>
+            <v-autocomplete
+                v-if="showEmpresaCombo"
+                label="Empresa"
+                :items="Empresas"
+                variant="underlined"
+                item-value="empresaId"
+                item-title="empresa"
+                v-model="fields.empresaId"
+            ></v-autocomplete>
              
             <Field
                 name="nombre"
@@ -182,7 +191,8 @@
 import { useEquipo } from "../composables/useEquipo";
 import { Field, useForm } from "vee-validate";
 import { CButton, CFileUploader } from "@core/index";
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, computed } from "vue";
+import { getEmpresaIdFromToken } from "@/helpers/tokenHelper";
 
 const { meta } = useForm();
 
@@ -204,11 +214,19 @@ const archivoLoaded = ref<{ base64?: string; name?: string; type?: string }>(
     {}
 );
 
-const { fields, handleSave, selectCategoriasEquipos, selImagenEquipo, selectTypeTorneo } =
+const { fields, handleSave, selectCategoriasEquipos, selImagenEquipo, selectTypeTorneo, selectEmpresaTorneo } =
     useEquipo();
 
 const Categorias = ref<any[]>([]);
 const TipoTorneos = ref<any[]>([]); // Inicializar como array vacío
+const Empresas = ref<any[]>([]); // Inicializar como array vacío
+
+// Computed para mostrar el combo de empresa solo cuando empresaId del token sea 0
+const showEmpresaCombo = computed(() => {
+    const empresaId = getEmpresaIdFromToken();
+    console.log('empresaId:', empresaId, 'tipo:', typeof empresaId, 'es igual a 0:', empresaId === 0);
+    return empresaId === 0;
+});
 
 // Variable local para el combo de tipo de deporte
 const tipoDeporteSeleccionado = ref<number | null>(null);
@@ -242,6 +260,9 @@ watch(
 
 onMounted(async () => {
     TipoTorneos.value = await selectTypeTorneo();
+    if (showEmpresaCombo.value) {
+        Empresas.value = await selectEmpresaTorneo();
+    }
     
     // Si fields.tipoDeporteId no viene, inicializar con null
     // Si viene, usar ese valor
