@@ -51,6 +51,7 @@ export const useEquipoService = () => {
                 esRamaMixto: equipoData.esRamaMixto,
                 extensionImg: equipoData.extensionImg, // si no tienes, lo puedes dejar vacío
                 categorias: categoriasTransformadas,
+                tipoDeporteId: equipoData.tipoDeporteId,
             };
 
             const response = await axios.post(
