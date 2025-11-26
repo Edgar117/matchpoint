@@ -340,6 +340,48 @@ export const useTorneoService = () => {
         }
     };
 
+    /**
+     * Assigns a team to a tournament with selected branches and categories.
+     * @param payload - The assignment data including torneoId, equipoId, ramas, and categorias.
+     */
+    const asignarEquipoTorneo = async (payload: {
+        torneoId: number;
+        equipoId: number;
+        esRamaVaronil: boolean;
+        esRamaFemenil: boolean;
+        esRamaMixto: boolean;
+        categorias: Array<{
+            equipoCategoriaId: number;
+            equipoId: number;
+            categoriaId: number;
+            regBorrado: number;
+        }>;
+    }) => {
+        try {
+            const response = await axios.post(
+                `${URLS.COTBUILDER}/api/Equipo/AsignarTorneo`,
+                payload
+            );
+
+            if (response.status === 200 || response.status === 201) {
+                handleShowSnackbar({
+                    text: `Equipo asignado al torneo exitosamente`,
+                    type: "success",
+                    valueModel: true,
+                });
+                return true;
+            }
+            return false;
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Error al asignar el equipo al torneo`,
+                type: "error",
+                valueModel: true,
+            });
+            return false;
+        }
+    };
+
     return {
         createTorneo,
         selectTorneo,
@@ -350,5 +392,6 @@ export const useTorneoService = () => {
         selectEmpresaTorneo,
         getEquiposNoAsignados,
         getEquiposAsignados,
+        asignarEquipoTorneo,
     };
 };

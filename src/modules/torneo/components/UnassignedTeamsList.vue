@@ -220,7 +220,7 @@
                     <!-- Assign Button -->
                     <div class="pt-4 border-t border-slate-200">
                         <button
-                            @click="handleAssignTeam(selectedTeamData)"
+                            @click="openAssignDialog"
                             :disabled="loadingCategorias"
                             class="w-full flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -231,14 +231,129 @@
                 </div>
             </div>
         </div>
+
+        <!-- Assignment Dialog -->
+        <v-dialog v-model="showAssignDialog" max-width="600" persistent>
+            <v-card>
+                <v-card-title class="bg-purple-600 text-white">
+                    <span class="text-h6">Asignar Equipo al Torneo</span>
+                    <v-spacer></v-spacer>
+                    <v-btn icon variant="text" @click="closeAssignDialog">
+                        <v-icon color="white">mdi-close</v-icon>
+                    </v-btn>
+                </v-card-title>
+
+                <v-card-text class="pa-6">
+                    <div v-if="selectedTeamData" class="space-y-6">
+                        <!-- Team Info -->
+                        <div class="bg-slate-50 rounded-lg p-4">
+                            <p class="text-sm text-slate-600 mb-1">Equipo:</p>
+                            <p class="text-lg font-semibold text-slate-900">
+                                {{ selectedTeamData.nombre || 'Sin nombre' }}
+                            </p>
+                        </div>
+
+                        <!-- Ramas Selection -->
+                        <div>
+                            <p class="text-sm font-semibold text-slate-700 mb-3">
+                                Selecciona las Ramas *
+                            </p>
+                            <div class="space-y-2">
+                                <v-checkbox
+                                    v-if="selectedTeamData.esRamaVaronil"
+                                    v-model="selectedRamas.esRamaVaronil"
+                                    label="Varonil"
+                                    color="blue"
+                                    hide-details
+                                ></v-checkbox>
+                                <v-checkbox
+                                    v-if="selectedTeamData.esRamaFemenil"
+                                    v-model="selectedRamas.esRamaFemenil"
+                                    label="Femenil"
+                                    color="pink"
+                                    hide-details
+                                ></v-checkbox>
+                                <v-checkbox
+                                    v-if="selectedTeamData.esRamaMixto"
+                                    v-model="selectedRamas.esRamaMixto"
+                                    label="Mixto"
+                                    color="purple"
+                                    hide-details
+                                ></v-checkbox>
+                                <p
+                                    v-if="!hasAvailableRamas"
+                                    class="text-sm text-slate-500 italic"
+                                >
+                                    No hay ramas disponibles para este equipo
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Categorías Selection -->
+                        <div v-if="categorias.length > 0">
+                            <p class="text-sm font-semibold text-slate-700 mb-3">
+                                Selecciona las Categorías
+                                <span v-if="categorias.length === 1" class="text-slate-500 font-normal">
+                                    (solo una disponible)
+                                </span>
+                                <span v-else class="text-slate-500 font-normal">
+                                    ({{ categorias.length }} disponibles)
+                                </span>
+                            </p>
+                            <div class="space-y-2 max-h-64 overflow-y-auto">
+                                <v-checkbox
+                                    v-for="categoria in categorias"
+                                    :key="categoria.categoriaId"
+                                    v-model="selectedCategorias"
+                                    :value="categoria.categoriaId"
+                                    :label="categoria.categoria"
+                                    color="emerald"
+                                    hide-details
+                                ></v-checkbox>
+                            </div>
+                            <p
+                                v-if="categorias.length > 1 && selectedCategorias.length === 0"
+                                class="text-xs text-amber-600 mt-2"
+                            >
+                                * Selecciona al menos una categoría
+                            </p>
+                        </div>
+                        <div v-else class="text-sm text-slate-500 italic">
+                            No hay categorías disponibles para este equipo
+                        </div>
+                    </div>
+                </v-card-text>
+
+                <v-card-actions class="pa-4 bg-slate-50">
+                    <v-spacer></v-spacer>
+                    <v-btn
+                        variant="text"
+                        color="grey"
+                        @click="closeAssignDialog"
+                        :disabled="saving"
+                    >
+                        Cancelar
+                    </v-btn>
+                    <v-btn
+                        color="purple"
+                        @click="handleAssignTeam"
+                        :disabled="!canAssign || saving"
+                        :loading="saving"
+                    >
+                        Asignar
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { Users, UserPlus } from "lucide-vue-next";
 import { URLS } from "@/helpers/constants";
 import { useEquipoService } from "@/modules/equipo/composables/useEquipoService";
+import { useTorneoService } from "../composables/useTorneoService";
 import { useTemplateUI } from "@/store/templateUI";
 import type { Equipo } from "@/interfaces/Equipo";
 import type { CategoriaEquipo } from "@/interfaces/Jugador";
@@ -250,16 +365,51 @@ interface IProps {
 }
 
 const props = defineProps<IProps>();
-defineEmits(["refresh"]);
+const emit = defineEmits(["refresh"]);
 
 const { handleShowSnackbar } = useTemplateUI();
 const { selectCategoriasPorEquipo } = useEquipoService();
+const { asignarEquipoTorneo } = useTorneoService();
 
 const selectedTeam = ref<number | null>(null);
 const selectedTeamData = ref<Equipo | null>(null);
 const categorias = ref<CategoriaEquipo[]>([]);
 const loadingCategorias = ref(false);
 const imageErrors = ref<Set<number>>(new Set());
+
+// Assignment dialog state
+const showAssignDialog = ref(false);
+const saving = ref(false);
+const selectedRamas = ref({
+    esRamaVaronil: false,
+    esRamaFemenil: false,
+    esRamaMixto: false,
+});
+const selectedCategorias = ref<number[]>([]);
+
+// Computed
+const hasAvailableRamas = computed(() => {
+    if (!selectedTeamData.value) return false;
+    return (
+        selectedTeamData.value.esRamaVaronil ||
+        selectedTeamData.value.esRamaFemenil ||
+        selectedTeamData.value.esRamaMixto
+    );
+});
+
+const canAssign = computed(() => {
+    // Must have at least one rama selected
+    const hasRamaSelected =
+        selectedRamas.value.esRamaVaronil ||
+        selectedRamas.value.esRamaFemenil ||
+        selectedRamas.value.esRamaMixto;
+
+    // If there are categorias, must have at least one selected
+    const hasCategoriaSelected =
+        categorias.value.length === 0 || selectedCategorias.value.length > 0;
+
+    return hasRamaSelected && hasCategoriaSelected;
+});
 
 const handleImageError = (event: Event) => {
     const img = event.target as HTMLImageElement;
@@ -307,16 +457,82 @@ const handleTeamSelected = async (equipoId: number | null) => {
     }
 };
 
-const handleAssignTeam = async (team: Equipo) => {
-    // TODO: Implement API call to assign team to tournament
-    // For now, just show a message and refresh
-    handleShowSnackbar({
-        text: `Funcionalidad de asignación en desarrollo. Equipo: ${team.nombre || 'Sin nombre'}`,
-        type: "warning",
-        valueModel: true,
-    });
-    // After implementing the API, call emit('refresh') to reload the lists
-    // emit('refresh');
+const openAssignDialog = () => {
+    if (!selectedTeamData.value) return;
+
+    // Reset selections
+    selectedRamas.value = {
+        esRamaVaronil: false,
+        esRamaFemenil: false,
+        esRamaMixto: false,
+    };
+    selectedCategorias.value = [];
+
+    // Pre-select first available rama if only one is available
+    if (selectedTeamData.value.esRamaVaronil && !selectedTeamData.value.esRamaFemenil && !selectedTeamData.value.esRamaMixto) {
+        selectedRamas.value.esRamaVaronil = true;
+    } else if (selectedTeamData.value.esRamaFemenil && !selectedTeamData.value.esRamaVaronil && !selectedTeamData.value.esRamaMixto) {
+        selectedRamas.value.esRamaFemenil = true;
+    } else if (selectedTeamData.value.esRamaMixto && !selectedTeamData.value.esRamaVaronil && !selectedTeamData.value.esRamaFemenil) {
+        selectedRamas.value.esRamaMixto = true;
+    }
+
+    // Pre-select all categorias if only one is available
+    if (categorias.value.length === 1) {
+        selectedCategorias.value = [categorias.value[0].categoriaId];
+    }
+
+    showAssignDialog.value = true;
+};
+
+const closeAssignDialog = () => {
+    showAssignDialog.value = false;
+    selectedRamas.value = {
+        esRamaVaronil: false,
+        esRamaFemenil: false,
+        esRamaMixto: false,
+    };
+    selectedCategorias.value = [];
+};
+
+const handleAssignTeam = async () => {
+    if (!selectedTeamData.value || !props.torneoId || !canAssign.value) {
+        return;
+    }
+
+    saving.value = true;
+    try {
+        // Build categorias array
+        const categoriasPayload = selectedCategorias.value.map((categoriaId) => ({
+            equipoCategoriaId: 0,
+            equipoId: selectedTeamData.value!.equipoId,
+            categoriaId: categoriaId,
+            regBorrado: 0,
+        }));
+
+        const payload = {
+            torneoId: props.torneoId,
+            equipoId: selectedTeamData.value.equipoId,
+            esRamaVaronil: selectedRamas.value.esRamaVaronil,
+            esRamaFemenil: selectedRamas.value.esRamaFemenil,
+            esRamaMixto: selectedRamas.value.esRamaMixto,
+            categorias: categoriasPayload,
+        };
+
+        const success = await asignarEquipoTorneo(payload);
+
+        if (success) {
+            closeAssignDialog();
+            // Reset selection
+            selectedTeam.value = null;
+            selectedTeamData.value = null;
+            categorias.value = [];
+            // Refresh the lists
+            emit("refresh");
+        }
+    } finally {
+        saving.value = false;
+    }
 };
 
 // Reset when teams change
