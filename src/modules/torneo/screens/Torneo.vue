@@ -74,6 +74,12 @@
                             :actions="[
                                 {
                                     color: 'primaryBlue',
+                                    handleAction: () => handleShowAsignarEquipos(item),
+                                    icon: 'mdi-account-group',
+                                    label: 'Asignar Equipos',
+                                },
+                                {
+                                    color: 'primaryBlue',
                                     handleAction: () => handleShowEdit(item),
                                     icon: 'mdi-pencil-outline',
                                     label: 'Editar Torneo',
@@ -159,6 +165,11 @@
             <TorneoForm :close-modal="closeModal"></TorneoForm>
         </CBottomSheet>
         <!-- END CUSTOM -->
+        <TeamManagement
+            v-model="showBottomAsignacionEquipos"
+            :torneo-nombre="fields.nombre"
+            :torneo-id="fields.torneoId"
+        />
         <CConfirmationDialog
             :title="dialogMessage.DELETE.title"
             :description="dialogMessage.DELETE.subtitle"
@@ -200,6 +211,7 @@ import { URLS } from "@/helpers/constants";
 
 //Form
 import TorneoForm from "../components/TorneoForm.vue";
+import TeamManagement from "../components/TeamManagement.vue";
 
 const {
     search,
@@ -223,5 +235,8 @@ const {
     loadingGrid,
     showFilterAction,
     showBottomAsignacion,
+    showBottomAsignacionEquipos,
+    handleShowAsignarEquipos,
+    fields,
 } = useTorneo();
 </script>

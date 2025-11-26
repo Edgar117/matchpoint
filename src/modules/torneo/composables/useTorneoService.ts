@@ -6,6 +6,7 @@ import { buildParams } from "@/modules/login/helpers/axiosHelper";
 import { useTemplateUI } from "@/store/templateUI";
 import { TipoTorneo, Torneo, TorneoRequestParams } from "@/interfaces/Torneo";
 import { Empresa } from "@/interfaces/Empresa";
+import { Equipo } from "@/interfaces/Equipo";
 
 /**
  * A composable function that provides torneo service methods.
@@ -197,6 +198,148 @@ export const useTorneoService = () => {
         });
     };
 
+    /**
+     * Retrieves teams not assigned to a tournament.
+     * @param params - Query parameters for filtering and pagination.
+     * @returns Array of unassigned teams.
+     */
+    const getEquiposNoAsignados = async (params: {
+        TorneoId: number;
+        EquipoId?: number;
+        RamaId?: number;
+        CategoriaId?: number;
+        Nombre?: string;
+        SortColumn?: string;
+        Offset?: number;
+        Next_Rows?: number;
+        SortDirection?: "ASC" | "DESC";
+    }): Promise<Equipo[]> => {
+        try {
+            const { data } = await axios.get<{
+                data: any[];
+                totalCount: number;
+            }>(
+                `${URLS.COTBUILDER}/api/Equipo/Torneo/EquiposNoAsignados`,
+                { params }
+            );
+
+            const equipos: Equipo[] = data.data.map((item) => {
+                let categorias: number[] | null = null;
+
+                if (item.categorias) {
+                    try {
+                        const parsed = JSON.parse(item.categorias);
+                        categorias = parsed.map((c: any) => c.CategoriaId);
+                    } catch {
+                        categorias = null; // si no se puede parsear
+                    }
+                }
+
+                return {
+                    torneoId: item.torneoId ?? null,
+                    torneo: item.torneo ?? "",
+                    equipoId: item.equipoId,
+                    entrenador: item.entrenador ?? "",
+                    nombre: item.nombre ?? "",
+                    descripcion: item.descripcion ?? "",
+                    pais: item.pais ?? "",
+                    estado: item.estado ?? "",
+                    poblacion: item.poblacion ?? "",
+                    colonia: item.colonia ?? "",
+                    logo: item.logo ?? "",
+                    extensionImg: item.extensionImg ?? "",
+                    esRamaVaronil: item.esRamaVaronil ?? false,
+                    esRamaFemenil: item.esRamaFemenil ?? false,
+                    esRamaMixto: item.esRamaMixto ?? false,
+                    categorias,
+                    tipoDeporteId: item.tipoDeporteId ?? null,
+                    tipoDeporte: item.tipoDeporte ?? null,
+                    empresaId: item.empresaId ?? null,
+                };
+            });
+
+            return equipos;
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Error al obtener equipos no asignados`,
+                type: "error",
+                valueModel: true,
+            });
+            return [];
+        }
+    };
+
+    /**
+     * Retrieves teams assigned to a tournament.
+     * @param params - Query parameters for filtering and pagination.
+     * @returns Array of assigned teams.
+     */
+    const getEquiposAsignados = async (params: {
+        TorneoId: number;
+        EquipoId?: number;
+        RamaId?: number;
+        CategoriaId?: number;
+        Nombre?: string;
+        SortColumn?: string;
+        Offset?: number;
+        Next_Rows?: number;
+        SortDirection?: "ASC" | "DESC";
+    }): Promise<Equipo[]> => {
+        try {
+            const { data } = await axios.get<{
+                data: any[];
+                totalCount: number;
+            }>(
+                `${URLS.COTBUILDER}/api/Equipo/Torneo/EquiposAsignados`,
+                { params }
+            );
+
+            const equipos: Equipo[] = data.data.map((item) => {
+                let categorias: number[] | null = null;
+
+                if (item.categorias) {
+                    try {
+                        const parsed = JSON.parse(item.categorias);
+                        categorias = parsed.map((c: any) => c.CategoriaId);
+                    } catch {
+                        categorias = null; // si no se puede parsear
+                    }
+                }
+
+                return {
+                    torneoId: item.torneoId ?? null,
+                    torneo: item.torneo ?? "",
+                    equipoId: item.equipoId,
+                    entrenador: item.entrenador ?? "",
+                    nombre: item.nombre ?? "",
+                    descripcion: item.descripcion ?? "",
+                    pais: item.pais ?? "",
+                    estado: item.estado ?? "",
+                    poblacion: item.poblacion ?? "",
+                    colonia: item.colonia ?? "",
+                    logo: item.logo ?? "",
+                    extensionImg: item.extensionImg ?? "",
+                    esRamaVaronil: item.esRamaVaronil ?? false,
+                    esRamaFemenil: item.esRamaFemenil ?? false,
+                    esRamaMixto: item.esRamaMixto ?? false,
+                    categorias,
+                    tipoDeporteId: item.tipoDeporteId ?? null,
+                    tipoDeporte: item.tipoDeporte ?? null,
+                    empresaId: item.empresaId ?? null,
+                };
+            });
+
+            return equipos;
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Error al obtener equipos asignados`,
+                type: "error",
+                valueModel: true,
+            });
+            return [];
+        }
+    };
+
     return {
         createTorneo,
         selectTorneo,
@@ -204,6 +347,8 @@ export const useTorneoService = () => {
         deleteTorneo,
         selImagenTorneo,
         selectTypeTorneo,
-        selectEmpresaTorneo
+        selectEmpresaTorneo,
+        getEquiposNoAsignados,
+        getEquiposAsignados,
     };
 };
