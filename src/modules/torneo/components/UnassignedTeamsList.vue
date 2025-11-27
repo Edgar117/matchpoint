@@ -179,6 +179,20 @@
                             <div class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
                             <p class="mt-2 text-xs text-slate-500">Cargando categorías...</p>
                         </div>
+                        <!-- Show categorías from team data if available (from JSON response) -->
+                        <div
+                            v-else-if="selectedTeamData?.categoriasDetalle && selectedTeamData.categoriasDetalle.length > 0"
+                            class="flex flex-wrap gap-2"
+                        >
+                            <span
+                                v-for="categoria in selectedTeamData.categoriasDetalle"
+                                :key="categoria.categoriaId"
+                                class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200"
+                            >
+                                {{ categoria.categoria }}
+                            </span>
+                        </div>
+                        <!-- Fallback to loaded categorias from API -->
                         <div
                             v-else-if="categorias.length === 0"
                             class="text-sm text-slate-500 italic"
@@ -353,13 +367,12 @@ import { ref, watch, computed } from "vue";
 import { Users, UserPlus } from "lucide-vue-next";
 import { URLS } from "@/helpers/constants";
 import { useEquipoService } from "@/modules/equipo/composables/useEquipoService";
-import { useTorneoService } from "../composables/useTorneoService";
+import { useTorneoService, type EquipoConCategorias } from "../composables/useTorneoService";
 import { useTemplateUI } from "@/store/templateUI";
-import type { Equipo } from "@/interfaces/Equipo";
 import type { CategoriaEquipo } from "@/interfaces/Jugador";
 
 interface IProps {
-    teams: Equipo[];
+    teams: EquipoConCategorias[];
     isLoading: boolean;
     torneoId?: number;
 }
@@ -372,7 +385,7 @@ const { selectCategoriasPorEquipo } = useEquipoService();
 const { asignarEquipoTorneo } = useTorneoService();
 
 const selectedTeam = ref<number | null>(null);
-const selectedTeamData = ref<Equipo | null>(null);
+const selectedTeamData = ref<EquipoConCategorias | null>(null);
 const categorias = ref<CategoriaEquipo[]>([]);
 const loadingCategorias = ref(false);
 const imageErrors = ref<Set<number>>(new Set());
@@ -436,23 +449,34 @@ const handleTeamSelected = async (equipoId: number | null) => {
 
     selectedTeamData.value = team;
 
-    // Load categorías for the selected team
-    if (props.torneoId && equipoId) {
-        loadingCategorias.value = true;
-        try {
-            categorias.value = await selectCategoriasPorEquipo(
-                props.torneoId,
-                equipoId
-            );
-        } catch (error) {
-            handleShowSnackbar({
-                text: `Error al cargar las categorías del equipo`,
-                type: "error",
-                valueModel: true,
-            });
-            categorias.value = [];
-        } finally {
-            loadingCategorias.value = false;
+    // Use categorías from team data if available (from JSON response), otherwise load from API
+    if (team.categoriasDetalle && team.categoriasDetalle.length > 0) {
+        categorias.value = team.categoriasDetalle.map((cat) => ({
+            categoriaId: cat.categoriaId,
+            categoria: cat.categoria,
+            descripcion: undefined,
+            ramaId: undefined,
+        }));
+        loadingCategorias.value = false;
+    } else {
+        // Load categorías from API if not available in team data
+        if (props.torneoId && equipoId) {
+            loadingCategorias.value = true;
+            try {
+                categorias.value = await selectCategoriasPorEquipo(
+                    props.torneoId,
+                    equipoId
+                );
+            } catch (error) {
+                handleShowSnackbar({
+                    text: `Error al cargar las categorías del equipo`,
+                    type: "error",
+                    valueModel: true,
+                });
+                categorias.value = [];
+            } finally {
+                loadingCategorias.value = false;
+            }
         }
     }
 };

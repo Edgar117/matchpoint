@@ -106,13 +106,19 @@
                     </div>
 
                     <div
-                        v-if="team.categorias"
+                        v-if="team.categoriasDetalle && team.categoriasDetalle.length > 0"
                         class="pt-2 border-t border-slate-100"
                     >
-                        <p class="text-xs text-slate-500 mb-1">Categorías:</p>
-                        <p class="text-sm text-slate-700 font-medium">
-                            {{ typeof team.categorias === 'string' ? team.categorias : (Array.isArray(team.categorias) ? team.categorias.join(', ') : '—') }}
-                        </p>
+                        <p class="text-xs text-slate-500 mb-2">Categorías:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <span
+                                v-for="categoria in team.categoriasDetalle"
+                                :key="categoria.categoriaId"
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200"
+                            >
+                                {{ categoria.categoria }}
+                            </span>
+                        </div>
                     </div>
 
                     <div
@@ -144,10 +150,10 @@ import { ref } from "vue";
 import { UserCheck, CheckCircle, UserMinus } from "lucide-vue-next";
 import { URLS } from "@/helpers/constants";
 import { useTemplateUI } from "@/store/templateUI";
-import type { Equipo } from "@/interfaces/Equipo";
+import type { EquipoConCategorias } from "../composables/useTorneoService";
 
 interface IProps {
-    teams: Equipo[];
+    teams: EquipoConCategorias[];
     isLoading: boolean;
     torneoId?: number;
 }
@@ -166,12 +172,12 @@ const handleImageError = (event: Event) => {
     }
 };
 
-const handleUnassignTeam = async (team: Equipo) => {
+const handleUnassignTeam = async (team: EquipoConCategorias) => {
     // TODO: Implement API call to unassign team from tournament
     // For now, just show a message and refresh
     handleShowSnackbar({
         text: `Funcionalidad de desasignación en desarrollo. Equipo: ${team.nombre || 'Sin nombre'}`,
-        type: "info",
+        type: "warning",
         valueModel: true,
     });
     // After implementing the API, call emit('refresh') to reload the lists

@@ -150,8 +150,7 @@ import { ref, computed, watch } from "vue";
 import { Users, UserCheck, Trophy } from "lucide-vue-next";
 import UnassignedTeamsList from "./UnassignedTeamsList.vue";
 import AssignedTeamsList from "./AssignedTeamsList.vue";
-import { useTorneoService } from "../composables/useTorneoService";
-import type { Equipo } from "@/interfaces/Equipo";
+import { useTorneoService, type EquipoConCategorias } from "../composables/useTorneoService";
 
 interface IProps {
     torneoNombre: string;
@@ -185,8 +184,8 @@ const tabs = [
 
 const { getEquiposNoAsignados, getEquiposAsignados } = useTorneoService();
 
-const unassignedTeams = ref<Equipo[]>([]);
-const assignedTeams = ref<Equipo[]>([]);
+const unassignedTeams = ref<EquipoConCategorias[]>([]);
+const assignedTeams = ref<EquipoConCategorias[]>([]);
 const loadingUnassigned = ref(false);
 const loadingAssigned = ref(false);
 

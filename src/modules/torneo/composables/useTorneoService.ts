@@ -8,6 +8,14 @@ import { TipoTorneo, Torneo, TorneoRequestParams } from "@/interfaces/Torneo";
 import { Empresa } from "@/interfaces/Empresa";
 import { Equipo } from "@/interfaces/Equipo";
 
+// Extended interface to include category details
+export interface EquipoConCategorias extends Equipo {
+    categoriasDetalle?: Array<{
+        categoriaId: number;
+        categoria: string;
+    }>;
+}
+
 /**
  * A composable function that provides torneo service methods.
  * @returns An object containing torneo service methods.
@@ -213,7 +221,7 @@ export const useTorneoService = () => {
         Offset?: number;
         Next_Rows?: number;
         SortDirection?: "ASC" | "DESC";
-    }): Promise<Equipo[]> => {
+    }): Promise<EquipoConCategorias[]> => {
         try {
             const { data } = await axios.get<{
                 data: any[];
@@ -284,7 +292,7 @@ export const useTorneoService = () => {
         Offset?: number;
         Next_Rows?: number;
         SortDirection?: "ASC" | "DESC";
-    }): Promise<Equipo[]> => {
+    }): Promise<EquipoConCategorias[]> => {
         try {
             const { data } = await axios.get<{
                 data: any[];
@@ -294,13 +302,18 @@ export const useTorneoService = () => {
                 { params }
             );
 
-            const equipos: Equipo[] = data.data.map((item) => {
+            const equipos: EquipoConCategorias[] = data.data.map((item) => {
                 let categorias: number[] | null = null;
+                let categoriasDetalle: Array<{ categoriaId: number; categoria: string }> | undefined = undefined;
 
                 if (item.categorias) {
                     try {
                         const parsed = JSON.parse(item.categorias);
                         categorias = parsed.map((c: any) => c.CategoriaId);
+                        categoriasDetalle = parsed.map((c: any) => ({
+                            categoriaId: c.CategoriaId,
+                            categoria: c.Categoria || c.categoria || "",
+                        }));
                     } catch {
                         categorias = null; // si no se puede parsear
                     }
@@ -323,6 +336,7 @@ export const useTorneoService = () => {
                     esRamaFemenil: item.esRamaFemenil ?? false,
                     esRamaMixto: item.esRamaMixto ?? false,
                     categorias,
+                    categoriasDetalle,
                     tipoDeporteId: item.tipoDeporteId ?? null,
                     tipoDeporte: item.tipoDeporte ?? null,
                     empresaId: item.empresaId ?? null,
