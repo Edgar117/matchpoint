@@ -16,6 +16,18 @@ export interface EquipoConCategorias extends Equipo {
     }>;
 }
 
+// Interface for tournament players
+export interface JugadorTorneo {
+    jugadorId: number;
+    nombre: string;
+    apellidoPaterno: string;
+    apellidoMaterno: string;
+    logo?: string;
+    fechaNacimiento: string | null;
+    curp: string;
+    equipoJugador?: string;
+}
+
 /**
  * A composable function that provides torneo service methods.
  * @returns An object containing torneo service methods.
@@ -396,6 +408,105 @@ export const useTorneoService = () => {
         }
     };
 
+    /**
+     * Retrieves players assigned to a team in a tournament.
+     * @param params - Query parameters including TorneoId, EquipoId, and pagination options.
+     * @returns Array of players.
+     */
+    const getJugadoresTorneo = async (params: {
+        TorneoId: number;
+        EquipoId: number;
+        SortColumn?: string;
+        Offset?: number;
+        Next_Rows?: number;
+        SortDirection?: "ASC" | "DESC";
+    }): Promise<JugadorTorneo[]> => {
+        try {
+            const { data } = await axios.get<JugadorTorneo[]>(
+                `${URLS.COTBUILDER}/api/Equipo/ObtenerJugadoresTorneo`,
+                { params }
+            );
+            return Array.isArray(data) ? data : [];
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Error al obtener jugadores del torneo`,
+                type: "error",
+                valueModel: true,
+            });
+            return [];
+        }
+    };
+
+    /**
+     * Removes a player from a tournament team.
+     * @param jugadorId - The ID of the player to remove.
+     * @param equipoId - The ID of the team.
+     * @param torneoId - The ID of the tournament.
+     * @returns True if successful, false otherwise.
+     */
+    const removerJugadorTorneo = async (
+        jugadorId: number,
+        equipoId: number,
+        torneoId: number
+    ): Promise<boolean> => {
+        try {
+            const response = await axios.put(
+                `${URLS.COTBUILDER}/api/Equipo/RemoverJugadorTorneo/${jugadorId}/${equipoId}/${torneoId}`
+            );
+
+            if (response.status === 200 || response.status === 204) {
+                handleShowSnackbar({
+                    text: `Jugador removido del torneo exitosamente`,
+                    type: "success",
+                    valueModel: true,
+                });
+                return true;
+            }
+            return false;
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Error al remover el jugador del torneo`,
+                type: "error",
+                valueModel: true,
+            });
+            return false;
+        }
+    };
+
+    /**
+     * Unassigns a team from a tournament.
+     * @param equipoId - The ID of the team.
+     * @param torneoId - The ID of the tournament.
+     * @returns True if successful, false otherwise.
+     */
+    const desasignarEquipoTorneo = async (
+        equipoId: number,
+        torneoId: number
+    ): Promise<boolean> => {
+        try {
+            const response = await axios.put(
+                `${URLS.COTBUILDER}/api/Equipo/DesasignarTorneo/${equipoId}/${torneoId}`
+            );
+
+            if (response.status === 200 || response.status === 204) {
+                handleShowSnackbar({
+                    text: `Equipo desasignado del torneo exitosamente`,
+                    type: "success",
+                    valueModel: true,
+                });
+                return true;
+            }
+            return false;
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Error al desasignar el equipo del torneo`,
+                type: "error",
+                valueModel: true,
+            });
+            return false;
+        }
+    };
+
     return {
         createTorneo,
         selectTorneo,
@@ -407,5 +518,8 @@ export const useTorneoService = () => {
         getEquiposNoAsignados,
         getEquiposAsignados,
         asignarEquipoTorneo,
+        getJugadoresTorneo,
+        removerJugadorTorneo,
+        desasignarEquipoTorneo,
     };
 };
