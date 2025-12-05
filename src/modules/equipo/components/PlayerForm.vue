@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-3xl">
-    <h2 class="text-2xl font-bold text-slate-900 mb-6">Crear Nuevo Jugador</h2>
+    <h2 class="text-2xl font-bold text-slate-900 mb-6">{{ props.editPlayer ? 'Editar Jugador' : 'Crear Nuevo Jugador' }}</h2>
 
     <form @submit.prevent="handleSubmit" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -204,6 +204,7 @@
       <CFileUploader
         titulo="Fotografía del jugador"
         :accepted-formats="'image/*'"
+        :valor-inicial="initialImageValue"
         @file-uploaded="handleFileUpload"
       />
 
@@ -214,7 +215,7 @@
           class="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <UserPlus class="w-5 h-5" />
-          {{ isSaving ? 'Guardando...' : 'Crear Jugador' }}
+          {{ isSaving ? 'Guardando...' : (props.editPlayer ? 'Actualizar Jugador' : 'Crear Jugador') }}
         </button>
         <button
           type="button"
@@ -235,6 +236,7 @@ import { UserPlus, Plus, Trash2 } from 'lucide-vue-next'
 import { CFileUploader } from '@core/index'
 import type { CategoriaEquipo, JugadorRequest, RamaEquipo } from '@/interfaces/Jugador'
 import { useEquipoService } from '../composables/useEquipoService'
+import { URLS } from '@/helpers/constants'
 
 interface Props {
   equipoId?: number
@@ -243,6 +245,23 @@ interface Props {
   ramas: RamaEquipo[]
   categorias: CategoriaEquipo[]
   isSaving?: boolean
+  editPlayer?: {
+    jugadorId: number
+    nombre: string
+    apellidoPaterno: string
+    apellidoMaterno: string
+    curp: string
+    fechaNacimiento: string | null
+    logo?: string
+    extensionImg?: string
+    equipoJugador: Array<{
+      equipoJugadorId: number
+      ramaId: number
+      categoriaId: number
+      posicionTipoTorneoId: number
+      num: number
+    }>
+  } | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -251,7 +270,8 @@ const props = withDefaults(defineProps<Props>(), {
   tipoDeporteId: null,
   ramas: () => [],
   categorias: () => [],
-  isSaving: false
+  isSaving: false,
+  editPlayer: null
 })
 
 const emit = defineEmits<{
@@ -320,6 +340,66 @@ watch(
     await loadPosiciones()
     if (form.posicionTipoTorneoId !== null) {
       form.posicionTipoTorneoId = null
+    }
+  },
+  { immediate: true }
+)
+
+// Función para resetear el formulario (definida antes del watcher)
+const resetForm = () => {
+  form.nombre = ''
+  form.apellidoPaterno = ''
+  form.apellidoMaterno = ''
+  form.curp = ''
+  form.fechaNacimiento = ''
+  form.posicionTipoTorneoId = null
+  form.ramaId = null
+  form.categoriaAssignments = []
+  form.logo = ''
+  form.extensionImg = ''
+  assignmentIdCounter = 0
+}
+
+// Watcher para cargar datos del jugador cuando se pasa en modo edición
+watch(
+  () => props.editPlayer,
+  (player) => {
+    if (player) {
+      // Cargar datos básicos
+      form.nombre = player.nombre || ''
+      form.apellidoPaterno = player.apellidoPaterno || ''
+      form.apellidoMaterno = player.apellidoMaterno || ''
+      form.curp = player.curp || ''
+      form.logo = player.logo || ''
+      form.extensionImg = player.extensionImg || ''
+      
+      // Cargar fecha de nacimiento
+      if (player.fechaNacimiento) {
+        const date = new Date(player.fechaNacimiento)
+        if (!Number.isNaN(date.getTime())) {
+          const year = date.getFullYear()
+          const month = String(date.getMonth() + 1).padStart(2, '0')
+          const day = String(date.getDate()).padStart(2, '0')
+          form.fechaNacimiento = `${year}-${month}-${day}`
+        }
+      }
+      
+      // Cargar asignaciones de categorías
+      if (player.equipoJugador && player.equipoJugador.length > 0) {
+        const firstAssignment = player.equipoJugador[0]
+        form.ramaId = firstAssignment.ramaId || null
+        form.posicionTipoTorneoId = firstAssignment.posicionTipoTorneoId || null
+        
+        // Cargar todas las asignaciones de categorías
+        form.categoriaAssignments = player.equipoJugador.map((asignacion) => ({
+          id: `assignment-${++assignmentIdCounter}`,
+          categoriaId: asignacion.categoriaId || null,
+          num: asignacion.num || null
+        }))
+      }
+    } else {
+      // Si no hay jugador para editar, resetear el formulario
+      resetForm()
     }
   },
   { immediate: true }
@@ -411,18 +491,24 @@ const handleSubmit = () => {
   // Crear un array de equipoJugador para cada asignación de categoría
   const equipoJugadorArray = form.categoriaAssignments
     .filter((assignment) => assignment.categoriaId !== null && assignment.num !== null)
-    .map((assignment) => ({
-      equipoJugadorId: 0,
-      ramaId: form.ramaId ?? 0,
-      categoriaId: assignment.categoriaId ?? 0,
-      posicionTipoTorneoId: form.posicionTipoTorneoId ?? 0,
-      num: assignment.num ?? 0,
-      jugador: `${form.nombre} ${form.apellidoPaterno} ${form.apellidoMaterno ?? ''}`.trim()
-    }))
+    .map((assignment) => {
+      // Si estamos editando, mantener el equipoJugadorId si existe
+      const existingAssignment = props.editPlayer?.equipoJugador?.find(
+        (eq) => eq.categoriaId === assignment.categoriaId
+      )
+      return {
+        equipoJugadorId: existingAssignment?.equipoJugadorId ?? 0,
+        ramaId: form.ramaId ?? 0,
+        categoriaId: assignment.categoriaId ?? 0,
+        posicionTipoTorneoId: form.posicionTipoTorneoId ?? 0,
+        num: assignment.num ?? 0,
+        jugador: `${form.nombre} ${form.apellidoPaterno} ${form.apellidoMaterno ?? ''}`.trim()
+      }
+    })
 
   const payload: JugadorRequest = {
     equipoId: props.equipoId,
-    jugadorId: 0,
+    jugadorId: props.editPlayer?.jugadorId ?? 0,
     nombre: form.nombre,
     apellidoPaterno: form.apellidoPaterno,
     apellidoMaterno: form.apellidoMaterno,
@@ -434,21 +520,9 @@ const handleSubmit = () => {
   }
 
   emit('submit', payload)
-  resetForm()
-}
-
-const resetForm = () => {
-  form.nombre = ''
-  form.apellidoPaterno = ''
-  form.apellidoMaterno = ''
-  form.curp = ''
-  form.fechaNacimiento = ''
-  form.posicionTipoTorneoId = null
-  form.ramaId = null
-  form.categoriaAssignments = []
-  form.logo = ''
-  form.extensionImg = ''
-  assignmentIdCounter = 0
+  if (!props.editPlayer) {
+    resetForm()
+  }
 }
 
 const handleFileUpload = (fileData: any) => {
@@ -468,4 +542,75 @@ const handleFileUpload = (fileData: any) => {
 }
 
 const isSaving = computed(() => props.isSaving ?? false)
+
+// Estado para la imagen inicial cargada desde el servidor
+const initialImageLoaded = ref<{
+  base64: string
+  name: string
+  type: string
+} | null>(null)
+
+// Función para cargar la imagen desde el endpoint y convertirla a base64
+const loadInitialImage = async () => {
+  if (!props.editPlayer || !props.editPlayer.logo || !props.editPlayer.jugadorId) {
+    initialImageLoaded.value = null
+    return
+  }
+  
+  try {
+    // Construir el nombre del logo completo
+    let nombreLogo = props.editPlayer.logo
+    if (!nombreLogo.includes('.')) {
+      const extension = props.editPlayer.extensionImg || 'jpg'
+      nombreLogo = `${nombreLogo}.${extension}`
+    }
+    
+    // Obtener la imagen desde el endpoint
+    const imageUrl = `${URLS.COTBUILDER}/api/Jugador/logo/${props.editPlayer.jugadorId}/${nombreLogo}`
+    
+    // Hacer fetch de la imagen
+    const response = await fetch(imageUrl)
+    if (!response.ok) {
+      initialImageLoaded.value = null
+      return
+    }
+    
+    const blob = await response.blob()
+    const reader = new FileReader()
+    
+    reader.onloadend = () => {
+      const base64String = reader.result as string
+      const extension = props.editPlayer?.extensionImg || 'jpg'
+      const mimeType = extension === 'png' ? 'image/png' : 
+                       extension === 'gif' ? 'image/gif' : 
+                       extension === 'webp' ? 'image/webp' : 
+                       'image/jpeg'
+      
+      initialImageLoaded.value = {
+        base64: base64String,
+        name: `jugador.${extension}`,
+        type: mimeType
+      }
+    }
+    
+    reader.readAsDataURL(blob)
+  } catch (error) {
+    console.error('Error loading player image:', error)
+    initialImageLoaded.value = null
+  }
+}
+
+// Watcher para cargar la imagen cuando cambie editPlayer
+watch(
+  () => props.editPlayer,
+  () => {
+    loadInitialImage()
+  },
+  { immediate: true }
+)
+
+// Computed para preparar el valor inicial de la imagen cuando se está editando
+const initialImageValue = computed(() => {
+  return initialImageLoaded.value || undefined
+})
 </script>

@@ -65,6 +65,13 @@
                     <Eye class="w-4 h-4" />
                   </button>
                   <button
+                    @click="emit('editPlayer', player)"
+                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Editar jugador"
+                  >
+                    <Pencil class="w-4 h-4" />
+                  </button>
+                  <button
                     @click="emit('deletePlayer', player.jugadorId.toString())"
                     class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Eliminar jugador"
@@ -171,7 +178,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { CheckCircle, Clock, Trash2, Users, Eye } from 'lucide-vue-next'
+import { CheckCircle, Clock, Trash2, Users, Eye, Pencil } from 'lucide-vue-next'
 import type { EquipoJugadorAsignacion, RamaEquipo, CategoriaEquipo } from '@/interfaces/Jugador'
 
 interface Player {
@@ -193,6 +200,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   deletePlayer: [playerId: string]
+  editPlayer: [player: Player]
 }>()
 
 const showDetailsModal = ref(false)
