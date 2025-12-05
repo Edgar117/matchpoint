@@ -13,7 +13,7 @@ export const getEmpresaIdFromToken = (): number | null => {
             return null;
         }
         const tokenData: TokenResponse = JSON.parse(token);
-        const decoded: any = jwt_decode(tokenData.token);
+        const decoded: any = jwt_decode(tokenData.accessToken);
         const empresaId = decoded.empresaId;
         
         // Convertir a número si existe, o retornar null

@@ -17,16 +17,19 @@ import router from "@/router";
 export const verifyExpirationTokenAndRefresh = async () => {
     try {
         const token: TokenResponse = JSON.parse(getToken());
-        const decoded = jwt_decode(token.token);
+        const decoded = jwt_decode(token.accessToken);
         const exp = moment.unix(decoded.exp);
         const current_time = moment();
+        // Renovar el token si expira en menos de 1 minuto
+        const timeUntilExpiration = exp.diff(current_time, 'minutes');
         // console.log(decoded)
         // console.log(token.refreshToken)
-        if (current_time < exp) {
-            return `${token.token}`;
+        if (timeUntilExpiration > 1) {
+            return `${token.accessToken}`;
         } else {
             const body = {
-                RefreshToken: token.refreshToken,
+                expiredAccessToken: token.accessToken,
+                refreshToken: token.refreshToken,
             };
 
             const settings = {
@@ -46,7 +49,7 @@ export const verifyExpirationTokenAndRefresh = async () => {
             const result = await fetchResponse.json();
             saveToken(result);
 
-            return result.token;
+            return result.accessToken;
         }
     } catch (error) {
         return "";
@@ -55,11 +58,11 @@ export const verifyExpirationTokenAndRefresh = async () => {
 export const logOff = async () => {
     if (getToken()) {
         const token: TokenResponse = JSON.parse(getToken());
-        const decoded = jwt_decode(token.token);
+        const decoded = jwt_decode(token.accessToken);
         const emited = moment(decoded.iat * 1000);
         const current_time = moment();
 
-        if (current_time.diff(emited, "minutes") >= 60) {
+        if (current_time.diff(emited, "minutes") >= 30) {
             localStorage.clear();
             logout();
             return;
