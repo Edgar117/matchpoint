@@ -403,8 +403,11 @@ const handleViewParticipants = async (team: EquipoConCategorias) => {
             Next_Rows: 100,
             SortDirection: "ASC",
         });
+        console.log('Jugadores recibidos:', jugadores);
+        console.log('Cantidad de jugadores:', jugadores.length);
         participants.value = jugadores;
     } catch (error) {
+        console.error('Error al cargar participantes:', error);
         handleShowSnackbar({
             text: "Error al cargar los participantes",
             type: "error",

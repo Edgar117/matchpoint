@@ -422,12 +422,30 @@ export const useTorneoService = () => {
         SortDirection?: "ASC" | "DESC";
     }): Promise<JugadorTorneo[]> => {
         try {
-            const { data } = await axios.get<JugadorTorneo[]>(
+            const response = await axios.get<{
+                data: JugadorTorneo[];
+                totalCount: number;
+            }>(
                 `${URLS.COTBUILDER}/api/Equipo/ObtenerJugadoresTorneo`,
                 { params }
             );
-            return Array.isArray(data) ? data : [];
+            
+            const data = response.data;
+            
+            // Handle both response formats: { data: [], totalCount: n } or direct array
+            if (data && typeof data === 'object' && 'data' in data) {
+                const players = Array.isArray(data.data) ? data.data : [];
+                return players;
+            }
+            
+            // If response is directly an array
+            if (Array.isArray(data)) {
+                return data;
+            }
+            
+            return [];
         } catch (error) {
+            console.error('Error al obtener jugadores del torneo:', error);
             handleShowSnackbar({
                 text: `Error al obtener jugadores del torneo`,
                 type: "error",
