@@ -445,7 +445,6 @@ export const useTorneoService = () => {
             
             return [];
         } catch (error) {
-            console.error('Error al obtener jugadores del torneo:', error);
             handleShowSnackbar({
                 text: `Error al obtener jugadores del torneo`,
                 type: "error",

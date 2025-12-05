@@ -140,16 +140,16 @@
                             <Users class="w-4 h-4" />
                             Ver Participantes
                         </button>
-                        <button
-                            @click="handleUnassignTeam(team)"
+                    <button
+                        @click="handleUnassignTeam(team)"
                             class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-                        >
-                            <UserMinus class="w-4 h-4" />
-                            Remover del Torneo
-                        </button>
-                    </div>
+                    >
+                        <UserMinus class="w-4 h-4" />
+                        Remover del Torneo
+                    </button>
                 </div>
             </div>
+        </div>
         </div>
 
         <!-- Confirmation Dialog for Removing Participant -->
@@ -403,11 +403,8 @@ const handleViewParticipants = async (team: EquipoConCategorias) => {
             Next_Rows: 100,
             SortDirection: "ASC",
         });
-        console.log('Jugadores recibidos:', jugadores);
-        console.log('Cantidad de jugadores:', jugadores.length);
         participants.value = jugadores;
     } catch (error) {
-        console.error('Error al cargar participantes:', error);
         handleShowSnackbar({
             text: "Error al cargar los participantes",
             type: "error",
@@ -458,11 +455,11 @@ const confirmRemoveParticipant = async () => {
 
 const handleUnassignTeam = (team: EquipoConCategorias) => {
     if (!props.torneoId) {
-        handleShowSnackbar({
+    handleShowSnackbar({
             text: "ID del torneo no disponible",
             type: "error",
-            valueModel: true,
-        });
+        valueModel: true,
+    });
         return;
     }
 
