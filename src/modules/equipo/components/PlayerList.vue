@@ -27,8 +27,15 @@
             >
               <td class="py-4 px-4">
                 <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-orange-500 rounded-full flex items-center justify-center text-white font-bold">
-                    {{ player.name.charAt(0) }}
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 bg-gradient-to-br from-purple-500 to-orange-500 relative">
+                    <img
+                      v-if="player.logo && !imageErrors[player.jugadorId]"
+                      :src="getPlayerImageUrl(player)"
+                      :alt="player.name"
+                      class="w-full h-full object-cover absolute inset-0"
+                      @error="() => handleImageError(player.jugadorId)"
+                    />
+                    <span class="text-white font-bold z-10">{{ player.name.charAt(0) }}</span>
                   </div>
                   <div>
                     <span class="font-medium text-slate-900 block">{{ player.name }}</span>
@@ -180,6 +187,7 @@
 import { computed, ref } from 'vue'
 import { CheckCircle, Clock, Trash2, Users, Eye, Pencil } from 'lucide-vue-next'
 import type { EquipoJugadorAsignacion, RamaEquipo, CategoriaEquipo } from '@/interfaces/Jugador'
+import { URLS } from '@/helpers/constants'
 
 interface Player {
   id: string
@@ -188,6 +196,8 @@ interface Player {
   age: number | null
   curp?: string
   fechaNacimiento?: string | null
+  logo?: string
+  extensionImg?: string
   equipoJugador: EquipoJugadorAsignacion[]
 }
 
@@ -205,6 +215,7 @@ const emit = defineEmits<{
 
 const showDetailsModal = ref(false)
 const selectedPlayer = ref<Player | null>(null)
+const imageErrors = ref<Record<number, boolean>>({})
 
 const formatDate = (value: string) => {
   const date = new Date(value)
@@ -254,5 +265,27 @@ const openDetailsModal = (player: Player) => {
 const closeDetailsModal = () => {
   showDetailsModal.value = false
   selectedPlayer.value = null
+}
+
+// Función para construir la URL de la imagen del jugador
+const getPlayerImageUrl = (player: Player): string => {
+  if (!player.logo || !player.jugadorId) return ''
+  
+  // Construir el nombre del logo completo
+  // Si el logo ya incluye la extensión, usarlo tal cual
+  // Si no, agregar la extensión desde extensionImg
+  let nombreLogo = player.logo
+  if (!nombreLogo.includes('.')) {
+    const extension = player.extensionImg || 'jpg'
+    nombreLogo = `${nombreLogo}.${extension}`
+  }
+  
+  // Construir la URL del endpoint
+  return `${URLS.COTBUILDER}/api/Jugador/logo/${player.jugadorId}/${nombreLogo}`
+}
+
+// Manejar error al cargar imagen
+const handleImageError = (jugadorId: number) => {
+  imageErrors.value[jugadorId] = true
 }
 </script>

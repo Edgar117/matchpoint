@@ -305,6 +305,8 @@ interface Player {
     age: number | null;
     curp?: string;
     fechaNacimiento?: string | null;
+    logo?: string;
+    extensionImg?: string;
     equipoJugador: EquipoJugadorAsignacion[]; // Todas las asignaciones del jugador
 }
 
@@ -431,6 +433,8 @@ const mapJugadorToPlayer = (jugador: Jugador): Player => {
         age: calculateAge(jugador.fechaNacimiento),
         curp: jugador.curp,
         fechaNacimiento: jugador.fechaNacimiento,
+        logo: jugador.logo,
+        extensionImg: jugador.extensionImg,
         equipoJugador: enrichedAsignaciones,
     };
 };
@@ -570,8 +574,12 @@ const handlePlayerUpdated = async (payload: JugadorRequest) => {
     savingPlayer.value = true;
     try {
         await updateJugador(editingPlayer.value.jugadorId, payload);
+        // Recargar la lista de jugadores para mostrar los cambios
         await loadPlayers();
+        // Cerrar el modal de edición
         closeEditModal();
+        // Cambiar a la pestaña de lista para que el usuario vea los cambios
+        activeTab.value = "list";
     } finally {
         savingPlayer.value = false;
     }
