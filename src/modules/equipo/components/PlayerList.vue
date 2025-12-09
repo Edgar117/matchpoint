@@ -104,8 +104,15 @@
         <v-card-title class="bg-gradient-to-r from-purple-600 to-orange-500 text-white px-6 py-4">
           <div class="flex items-center justify-between w-full">
             <div class="flex items-center gap-3">
-              <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                {{ selectedPlayer.name.charAt(0) }}
+              <div class="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 bg-white/20 relative">
+                <img
+                  v-if="selectedPlayer.logo && selectedPlayer.jugadorId && !imageErrors[selectedPlayer.jugadorId]"
+                  :src="getPlayerImageUrl(selectedPlayer)"
+                  :alt="selectedPlayer.name"
+                  class="w-full h-full object-cover absolute inset-0"
+                  @error="() => handleImageError(selectedPlayer.jugadorId)"
+                />
+                <span class="text-white font-bold text-lg z-10">{{ selectedPlayer.name.charAt(0) }}</span>
               </div>
               <div>
                 <h3 class="text-xl font-bold">{{ selectedPlayer.name }}</h3>

@@ -42,6 +42,7 @@
                     </div>
                 </div>
                 <button
+                    type="button"
                     @click="clearFile"
                     class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                     title="Eliminar archivo"
@@ -53,6 +54,7 @@
             <!-- Botón de previsualización -->
             <div v-if="isImage" class="mt-2">
                 <button
+                    type="button"
                     @click="showPreview = !showPreview"
                     class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                 >

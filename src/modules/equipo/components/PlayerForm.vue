@@ -231,7 +231,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch, ref } from 'vue'
+import { computed, reactive, watch, ref, nextTick } from 'vue'
 import { UserPlus, Plus, Trash2 } from 'lucide-vue-next'
 import { CFileUploader } from '@core/index'
 import type { CategoriaEquipo, JugadorRequest, RamaEquipo } from '@/interfaces/Jugador'
@@ -336,9 +336,11 @@ const loadPosiciones = async () => {
 // Watcher para cargar posiciones cuando cambie tipoDeporteId
 watch(
   () => props.tipoDeporteId,
-  async (newValue) => {
+  async () => {
     await loadPosiciones()
-    if (form.posicionTipoTorneoId !== null) {
+    // Solo resetear la posición si NO estamos editando un jugador
+    // Si estamos editando, el watcher de editPlayer ya estableció el valor correcto
+    if (!props.editPlayer && form.posicionTipoTorneoId !== null) {
       form.posicionTipoTorneoId = null
     }
   },
@@ -363,15 +365,19 @@ const resetForm = () => {
 // Watcher para cargar datos del jugador cuando se pasa en modo edición
 watch(
   () => props.editPlayer,
-  (player) => {
+  async (player) => {
     if (player) {
+      // Asegurarse de que las posiciones estén cargadas antes de establecer el valor
+      if (props.tipoDeporteId) {
+        await loadPosiciones()
+      }
+      
       // Cargar datos básicos
       form.nombre = player.nombre || ''
       form.apellidoPaterno = player.apellidoPaterno || ''
       form.apellidoMaterno = player.apellidoMaterno || ''
       form.curp = player.curp || ''
-      form.logo = player.logo || ''
-      form.extensionImg = player.extensionImg || ''
+      // NO setear form.logo y form.extensionImg aquí, loadInitialImage lo hará con el base64 correcto
       
       // Cargar fecha de nacimiento
       if (player.fechaNacimiento) {
@@ -387,16 +393,31 @@ watch(
       // Cargar asignaciones de categorías
       if (player.equipoJugador && player.equipoJugador.length > 0) {
         const firstAssignment = player.equipoJugador[0]
-        form.ramaId = firstAssignment.ramaId || null
-        form.posicionTipoTorneoId = firstAssignment.posicionTipoTorneoId || null
+        form.ramaId = firstAssignment.ramaId ?? null
+        
+        // Establecer la posición después de asegurar que las posiciones estén cargadas
+        const posicionId = firstAssignment.posicionTipoTorneoId ?? null
+        if (posicionId !== null && posicionId !== undefined) {
+          // Convertir a número para asegurar que coincida con el tipo del select
+          const posicionIdNum = Number(posicionId)
+          if (!Number.isNaN(posicionIdNum)) {
+            // Usar nextTick para asegurar que el select esté renderizado
+            await nextTick()
+            form.posicionTipoTorneoId = posicionIdNum
+          }
+        }
         
         // Cargar todas las asignaciones de categorías
         form.categoriaAssignments = player.equipoJugador.map((asignacion) => ({
           id: `assignment-${++assignmentIdCounter}`,
-          categoriaId: asignacion.categoriaId || null,
-          num: asignacion.num || null
+          categoriaId: asignacion.categoriaId ?? null,
+          num: asignacion.num ?? null
         }))
       }
+      
+      // Cargar la imagen después de setear los otros datos
+      // Esto asegura que form.logo tenga el base64 correcto
+      await loadInitialImage()
     } else {
       // Si no hay jugador para editar, resetear el formulario
       resetForm()
@@ -505,7 +526,6 @@ const handleSubmit = () => {
         jugador: `${form.nombre} ${form.apellidoPaterno} ${form.apellidoMaterno ?? ''}`.trim()
       }
     })
-
   const payload: JugadorRequest = {
     equipoId: props.equipoId,
     jugadorId: props.editPlayer?.jugadorId ?? 0,
@@ -550,10 +570,23 @@ const initialImageLoaded = ref<{
   type: string
 } | null>(null)
 
+// Función auxiliar para convertir Blob a Base64 (similar a empresa)
+const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
 // Función para cargar la imagen desde el endpoint y convertirla a base64
+// Aplicando la misma lógica que EmpresaForm.vue
 const loadInitialImage = async () => {
   if (!props.editPlayer || !props.editPlayer.logo || !props.editPlayer.jugadorId) {
     initialImageLoaded.value = null
+    form.logo = ''
+    form.extensionImg = ''
     return
   }
   
@@ -572,42 +605,40 @@ const loadInitialImage = async () => {
     const response = await fetch(imageUrl)
     if (!response.ok) {
       initialImageLoaded.value = null
+      form.logo = ''
+      form.extensionImg = ''
       return
     }
     
     const blob = await response.blob()
-    const reader = new FileReader()
+    const baseImagen = await blobToBase64(blob)
     
-    reader.onloadend = () => {
-      const base64String = reader.result as string
-      const extension = props.editPlayer?.extensionImg || 'jpg'
-      const mimeType = extension === 'png' ? 'image/png' : 
-                       extension === 'gif' ? 'image/gif' : 
-                       extension === 'webp' ? 'image/webp' : 
-                       'image/jpeg'
-      
-      initialImageLoaded.value = {
-        base64: base64String,
-        name: `jugador.${extension}`,
-        type: mimeType
-      }
-    }
-    
-    reader.readAsDataURL(blob)
+    // Aplicar la misma lógica que EmpresaForm.vue (líneas 272-285)
+    initialImageLoaded.value = baseImagen
+      ? {
+          base64: `${baseImagen}`,
+          name: `jugador.${props.editPlayer.extensionImg || 'jpg'}`,
+          type: props.editPlayer.extensionImg === 'png' ? 'image/png' : 
+                props.editPlayer.extensionImg === 'gif' ? 'image/gif' : 
+                props.editPlayer.extensionImg === 'webp' ? 'image/webp' : 
+                'image/jpeg'
+        }
+      : null
+
+    // Guardar el base64 en form.logo y form.extensionImg para que se envíe la misma info si no cambia
+    // Similar a como funciona en empresa (líneas 280-285)
+    form.logo =
+      typeof baseImagen === "string" && baseImagen !== null
+        ? baseImagen.split(",")[1]
+        : ""
+    form.extensionImg = props.editPlayer.extensionImg || 'jpg'
   } catch (error) {
     console.error('Error loading player image:', error)
     initialImageLoaded.value = null
+    form.logo = ''
+    form.extensionImg = ''
   }
 }
-
-// Watcher para cargar la imagen cuando cambie editPlayer
-watch(
-  () => props.editPlayer,
-  () => {
-    loadInitialImage()
-  },
-  { immediate: true }
-)
 
 // Computed para preparar el valor inicial de la imagen cuando se está editando
 const initialImageValue = computed(() => {
