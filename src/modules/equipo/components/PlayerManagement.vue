@@ -141,8 +141,12 @@
                             :is-loading="loadingPlayers"
                             :ramas="ramas"
                             :categorias="categorias"
+                            :equipo-id="props.equipoId"
+                            :torneo-id="props.torneoId"
+                            :tipo-deporte-id="tipoDeporteId"
                             @delete-player="handleDeletePlayer"
                             @edit-player="handleEditPlayer"
+                            @refresh="loadPlayers"
                         />
                         <TeamAssignment
                             v-if="activeTab === 'assign'"
@@ -255,7 +259,6 @@ import {
     Trophy,
     UserPlus,
     List,
-    UsersRound,
     Trash2,
 } from "lucide-vue-next";
 import PlayerForm from "./PlayerForm.vue";

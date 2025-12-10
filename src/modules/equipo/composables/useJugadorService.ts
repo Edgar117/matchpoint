@@ -169,11 +169,48 @@ export const useJugadorService = () => {
         }
     };
 
+    const asignarJugadorATorneos = async (payload: {
+        equipoId: number;
+        jugadorId: number;
+        jugadorTorneo: Array<{
+            torneoId: number;
+            jug: Array<{
+                ramaId: string | number;
+                categoriaId: string | number;
+                posicionTipoDeporteId: string | number;
+                num: string | number;
+                jugador: string;
+            }>;
+        }>;
+    }) => {
+        try {
+            const response = await axios.post(
+                `${URLS.COTBUILDER}/api/Jugador/AsignarTorneo`,
+                payload
+            );
+            if (response.status === 200 || response.status === 201) {
+                handleShowSnackbar({
+                    text: `El jugador se asignó correctamente a los torneos`,
+                    type: "success",
+                    valueModel: true,
+                });
+            }
+        } catch (error) {
+            handleShowSnackbar({
+                text: `No fue posible asignar el jugador a los torneos`,
+                type: "error",
+                valueModel: true,
+            });
+            throw error;
+        }
+    };
+
     return {
         fetchJugadores,
         createJugador,
         updateJugador,
         deleteJugador,
+        asignarJugadorATorneos,
     };
 };
 
