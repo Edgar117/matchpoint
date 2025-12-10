@@ -2,6 +2,7 @@
     <div class="min-h-screen bg-background text-foreground">
         <!-- Header -->
         <header
+            ref="menuRef"
             class="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border"
         >
             <div class="container mx-auto px-4 py-4">
@@ -82,8 +83,13 @@
                                 />
                             </svg>
                         </div>
-                        <button class="md:hidden p-2">
+                        <button 
+                            @click.stop="isMenuOpen = !isMenuOpen"
+                            class="md:hidden p-2 bg-white rounded hover:bg-muted transition-colors"
+                            :class="{ 'bg-primary/10': isMenuOpen }"
+                        >
                             <svg
+                                v-if="!isMenuOpen"
                                 class="w-6 h-6"
                                 fill="none"
                                 stroke="currentColor"
@@ -96,10 +102,79 @@
                                     d="M4 6h16M4 12h16M4 18h16"
                                 />
                             </svg>
+                            <svg
+                                v-else
+                                class="w-6 h-6"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
                         </button>
                     </div>
                 </div>
             </div>
+            
+            <!-- Mobile Menu -->
+            <Transition
+                enter-active-class="transition ease-out duration-200"
+                enter-from-class="opacity-0 -translate-y-2"
+                enter-to-class="opacity-100 translate-y-0"
+                leave-active-class="transition ease-in duration-150"
+                leave-from-class="opacity-100 translate-y-0"
+                leave-to-class="opacity-0 -translate-y-2"
+            >
+                <div
+                    v-if="isMenuOpen"
+                    class="md:hidden bg-background border-t border-border shadow-lg"
+                >
+                <nav class="flex flex-col py-4 px-4 space-y-2">
+                    <a
+                        href="#"
+                        class="text-foreground hover:text-primary transition-colors font-medium py-2 px-4 rounded-lg hover:bg-muted"
+                        @click="isMenuOpen = false"
+                        >Torneos</a
+                    >
+                    <a
+                        href="#"
+                        class="text-foreground hover:text-primary transition-colors font-medium py-2 px-4 rounded-lg hover:bg-muted"
+                        @click="isMenuOpen = false"
+                        >Equipos</a
+                    >
+                    <a
+                        href="#"
+                        class="text-foreground hover:text-primary transition-colors font-medium py-2 px-4 rounded-lg hover:bg-muted"
+                        @click="isMenuOpen = false"
+                        >Estadísticas</a
+                    >
+                    <a
+                        href="#"
+                        class="text-foreground hover:text-primary transition-colors font-medium py-2 px-4 rounded-lg hover:bg-muted"
+                        @click="isMenuOpen = false"
+                        >Partidos</a
+                    >
+                    <a
+                        href="#"
+                        @click="
+                            router.push(
+                                   user != null ? 'Home' : 'Login'
+                            );
+                            isMenuOpen = false;
+                        "
+                        class="text-foreground hover:text-primary transition-colors font-medium py-2 px-4 rounded-lg hover:bg-muted"
+                        >{{
+                            user != null ? "Ir al panel" : "Iniciar Sesión"
+                        }}</a
+                    >
+                </nav>
+                </div>
+            </Transition>
         </header>
 
         <!-- Hero Section -->
@@ -109,9 +184,6 @@
             <div
                 class="absolute inset-0 bg-gradient-to-br from-primary/20 via-secondary/10 to-background"
             ></div>
-            <img
-                class="absolute inset-0 w-full h-full object-cover opacity-30"
-            />
 
             <div class="relative z-10 text-center max-w-4xl mx-auto px-4">
                 <h2 class="text-6xl md:text-8xl font-bold mb-6 text-balance">
@@ -729,7 +801,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useLoginStore } from "../../login/store/state";
 const { user } = storeToRefs(useLoginStore());
@@ -743,6 +815,23 @@ if (value) {
 }
 
 const tournamentsSection = ref(null);
+const isMenuOpen = ref(false);
+const menuRef = ref<HTMLElement | null>(null);
+
+// Cerrar menú al hacer clic fuera
+const handleClickOutside = (event: MouseEvent) => {
+    if (menuRef.value && !menuRef.value.contains(event.target as Node)) {
+        isMenuOpen.value = false;
+    }
+};
+
+onMounted(() => {
+    document.addEventListener("click", handleClickOutside);
+});
+
+onUnmounted(() => {
+    document.removeEventListener("click", handleClickOutside);
+});
 
 const tournaments = ref([
     {

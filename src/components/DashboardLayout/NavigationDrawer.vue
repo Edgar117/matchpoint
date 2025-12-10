@@ -34,18 +34,19 @@
                 :class="[{ hidden: !drawer }]"
                 class="text-[#9ca3af] font-semibold text-xs"
             >
-                NODULOS
+                MODULOS
             </h2>
         </div>
 
         <div :class="[{ hidden: !drawer }]" class="px-5 mb-2 mt-10">
             <v-text-field
-                label="Escriba para buscar"
+                label="Busca un módulo"
                 density="compact"
                 hide-details
                 v-model="filtertext"
             ></v-text-field>
         </div>
+        
         <v-list v-if="drawer" v-model:opened="open">
             <v-list-item
                 v-for="(item, i) in rotesWithFilter"
@@ -58,7 +59,7 @@
                     @click="() => {}"
                     :to="`/${item.path}`"
                     :prepend-icon="item.icon"
-                    :title="item.name"
+                    :title="t(`navigationDrawer.${item.name}`)"
                 >
                 </v-list-item>
                 <v-list-group v-else :key="i" :value="item.name">
@@ -66,7 +67,13 @@
                         <v-list-item
                             class="w-full"
                             v-bind="props"
-                            :title="item.name"
+                            :title="
+                                t(
+                                    `navigationDrawer.${item.name
+                                        .replaceAll(' ', '')
+                                        .replaceAll('ó', 'o')}` //Cambiar por funcion que considere todo
+                                )
+                            "
                         >
                             <!-- PARENT NO COLAPSADO -->
                             <template v-slot:prepend>
@@ -88,24 +95,35 @@
                                 v-if="subChildren.hasChildren"
                                 class="secondLevel"
                                 v-bind="props"
-                                :title="subChildren.name.split('||')[1]"
+                                :title="
+                                    t(
+                                        `navigationDrawer.${
+                                            subChildren.name.split('||')[1]
+                                        }`
+                                    )
+                                "
                             >
                                 <!-- <template v-slot:prepend>
                                     <v-icon small>{{ subChildren.icon }}</v-icon>
                                 </template> -->
                             </v-list-item>
                         </template>
-                        <!-- <v-list-item
+                        <v-list-item
                             v-if="subChildren.hasChildren"
                             class="thirdLevel"
                             v-for="(finalChildrens, i) in subChildren.children"
                             :key="i"
-                            :title="finalChildrens.name"
+                            :title="
+                                t(`navigationDrawer.${finalChildrens.name}`)
+                            "
                             :value="finalChildrens.name"
                             @click="() => {}"
                             :to="`/${item.path}/${subChildren.path}/${finalChildrens.path}`"
                         >
-                        </v-list-item> -->
+                            <!-- <template v-slot:prepend>
+                                <v-icon small>{{ finalChildrens.icon }}</v-icon>
+                            </template> -->
+                        </v-list-item>
                     </v-list-group>
                     <template
                         v-for="(subChildren, index) in item.children"
@@ -114,9 +132,18 @@
                         <v-list-item
                             v-if="!subChildren.hasChildren"
                             :value="subChildren.name"
-                            :title="subChildren.name"
+                            :title="
+                                t(
+                                    `navigationDrawer.${subChildren.name.replaceAll(
+                                        ' ',
+                                        ''
+                                    )}`
+                                )
+                            "
                             @click="() => {}"
                             :to="`/${item.path}/${subChildren.path}`"
+                            nav
+                            density="compact"
                         >
                             <template v-slot:prepend>
                                 <v-icon small>{{ subChildren.icon }}</v-icon>
@@ -127,7 +154,7 @@
             </v-list-item>
         </v-list>
         <v-list v-else>
-            <v-list-item v-for="(item, i) in screensRole" :key="i">
+            <v-list-item v-for="(item, i) in routes" :key="i">
                 <v-menu
                     :close-on-content-click="item.level !== 3"
                     location="end"
@@ -171,7 +198,7 @@
                                     ]"
                                     class="text-white"
                                 >
-                                    {{ item.name }}
+                                    {{ t(`navigationDrawer.${item.name}`) }}
                                 </v-list-item-title>
                             </div>
                         </router-link>
@@ -224,9 +251,13 @@
                                     class="text-white"
                                 >
                                     {{
-                                        item.name.includes("||")
-                                            ? item.name.split("||")[0]
-                                            : item.name
+                                        t(
+                                            `navigationDrawer.${
+                                                item.name.includes("||")
+                                                    ? item.name.split("||")[0]
+                                                    : item.name
+                                            }`
+                                        )
                                     }}
                                 </v-list-item-title>
                             </div>
@@ -251,7 +282,9 @@
                                 class="flex gap-4 px-4 rounded-lg"
                                 :to="childRoute.path"
                                 :prepend-icon="childRoute.icon"
-                                :title="childRoute.name"
+                                :title="
+                                    t(`navigationDrawer.${childRoute.name}`)
+                                "
                             >
                             </v-list-item>
                         </template>
@@ -277,11 +310,17 @@
                                             @click="() => {}"
                                         >
                                             {{
-                                                childRoute.name?.includes("||")
-                                                    ? childRoute.name?.split(
-                                                          "||"
-                                                      )[1]
-                                                    : childRoute.name
+                                                t(
+                                                    `navigationDrawer.${
+                                                        childRoute.name?.includes(
+                                                            "||"
+                                                        )
+                                                            ? childRoute.name?.split(
+                                                                  "||"
+                                                              )[1]
+                                                            : childRoute.name
+                                                    }`
+                                                )
                                             }}
                                         </v-list-item>
                                     </template>
@@ -290,9 +329,13 @@
                                         min-width="250"
                                         class="border"
                                     >
-                                        <!-- <v-list-item
+                                        <v-list-item
                                             :prepend-icon="child.icon"
-                                            :title="child.name"
+                                            :title="
+                                                t(
+                                                    `navigationDrawer.${child.name}`
+                                                )
+                                            "
                                             v-for="(
                                                 child, j
                                             ) in childRoute.children"
@@ -300,7 +343,7 @@
                                             @click="() => {}"
                                             :to="`/${item.path}/${childRoute.path}/${child.path}`"
                                         >
-                                        </v-list-item> -->
+                                        </v-list-item>
                                     </v-card>
                                 </v-menu>
 
@@ -311,7 +354,14 @@
                                     class="w-full"
                                     @click="() => {}"
                                 >
-                                    {{ childRoute.name }}
+                                    {{
+                                        t(
+                                            `navigationDrawer.${childRoute.name.replaceAll(
+                                                " ",
+                                                ""
+                                            )}`
+                                        )
+                                    }}
                                 </v-list-item>
                             </template>
                         </template>
@@ -331,22 +381,22 @@ import { getRoutes } from "@/helpers/localstorageHandler";
 import { buildRoute } from "@/modules/login/helpers/buildRoute";
 import { ref, watch } from "vue";
 import { removeAccents } from "@/helpers/tools";
-import { useUserGlobal } from "../../store/userGlobal";
-const { roleSelectId } = storeToRefs(useUserGlobal());
-const { drawer } = storeToRefs(useTemplateUI());
-const { user, screensRole } = storeToRefs(useLoginStore());
 
-const routes = ref(buildRoute(getRoutes(), true));
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
+
+const { drawer } = storeToRefs(useTemplateUI());
+const { user } = storeToRefs(useLoginStore());
+
+let routes = buildRoute(getRoutes(), true);
 const rotesWithFilter = ref(routes);
 const filtertext = ref("");
 const open = ref([""]);
-// console.log(routes)
+
 const filterMenu = (menu: any, searchText: string): any => {
-    // debugger;
     return menu
         ?.map((item: any) => {
-            // console.log(item);
-            const children = item.hasChildren
+            const children = item.children
                 ? filterMenu(item.children, searchText)
                 : [];
             const hasMatchingChildren = children!.length > 0;
@@ -363,7 +413,7 @@ const filterMenu = (menu: any, searchText: string): any => {
 
 watch(filtertext, () => {
     open.value = [];
-    rotesWithFilter.value = filterMenu(screensRole.value, filtertext.value);
+    rotesWithFilter.value = filterMenu(routes, filtertext.value);
     if (rotesWithFilter.value?.length == 1) {
         open.value.push(
             rotesWithFilter.value[0] ? rotesWithFilter.value[0].name : ""
@@ -376,13 +426,6 @@ watch(filtertext, () => {
             );
         }
     }
-});
-
-watch([screensRole], async () => {
-    // setTimeout(() => {
-    rotesWithFilter.value = screensRole.value;
-    filtertext.value = "";
-    // }, 2000);
 });
 </script>
 
@@ -400,9 +443,9 @@ watch([screensRole], async () => {
 :deep(.v-list-group__items .thirdLevel) {
     --indent-padding: 10px !important;
 }
-
-.v-list-group__items .v-list-item {
-    padding-inline-start: 30px !important; /* Dejar el !important solo si es absolutamente necesario */
+:deep(.v-list .v-list-item--nav:not(:only-child)) {
+    margin-bottom: 4px;
+    margin-left: -30px;
 }
 /* .v-list-group__prepend {
     width: 25px;
