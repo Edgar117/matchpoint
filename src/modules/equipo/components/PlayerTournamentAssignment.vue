@@ -71,6 +71,23 @@
                             comenzar.
                         </p>
                     </div>
+                    
+                    <div
+                        v-if="errorMessage"
+                        class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between gap-3"
+                    >
+                        <p class="text-sm text-red-600 flex-1">{{ errorMessage }}</p>
+                        <button
+                            type="button"
+                            @click="clearErrorMessage"
+                            class="flex-shrink-0 p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
+                            title="Cerrar"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
 
                     <div v-else class="space-y-3">
                         <div
@@ -92,7 +109,13 @@
                                     <select
                                         v-model.number="assignment.ramaId"
                                         required
-                                        class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                                        @change="validateAssignment(torneo.torneoId, index)"
+                                        :class="[
+                                            'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm',
+                                            isDuplicateAssignment(torneo.torneoId, index)
+                                                ? 'border-red-500'
+                                                : 'border-slate-300'
+                                        ]"
                                     >
                                         <option value="">Seleccionar</option>
                                         <option
@@ -116,7 +139,13 @@
                                     <select
                                         v-model.number="assignment.categoriaId"
                                         required
-                                        class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                                        @change="validateAssignment(torneo.torneoId, index)"
+                                        :class="[
+                                            'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm',
+                                            isDuplicateAssignment(torneo.torneoId, index)
+                                                ? 'border-red-500'
+                                                : 'border-slate-300'
+                                        ]"
                                     >
                                         <option value="">Seleccionar</option>
                                         <option
@@ -130,6 +159,12 @@
                                             {{ categoria.categoria }}
                                         </option>
                                     </select>
+                                    <p
+                                        v-if="isDuplicateAssignment(torneo.torneoId, index)"
+                                        class="text-xs text-red-600 mt-1"
+                                    >
+                                        Esta combinación de rama y categoría ya está asignada
+                                    </p>
                                 </div>
 
                                 <div class="md:col-span-2">
@@ -147,7 +182,7 @@
                                     >
                                         <option value="">Seleccionar</option>
                                         <option
-                                            v-for="posicion in posiciones"
+                                            v-for="posicion in posicionesFiltradas"
                                             :key="posicion.posicionTipoTorneoId"
                                             :value="
                                                 posicion.posicionTipoTorneoId
@@ -244,7 +279,7 @@ const {
     selectCategoriasPorEquipo,
     selectPosicionesTipoTorneo,
 } = useEquipoService();
-const { asignarJugadorATorneos } = useJugadorService();
+const { asignarJugadorATorneos, fetchJugadores } = useJugadorService();
 
 const torneos = ref<TorneoEquipo[]>([]);
 const loadingTorneos = ref(false);
@@ -261,6 +296,23 @@ const posiciones = ref<
     }>
 >([]);
 
+// Almacenar las ramas y categorías disponibles del jugador
+const jugadorRamasDisponibles = ref<number[]>([]);
+const jugadorCategoriasDisponibles = ref<number[]>([]);
+const jugadorPosicionDefault = ref<number | null>(null);
+const errorMessage = ref<string>("");
+
+// Filtrar posiciones para mostrar solo la que el jugador tiene configurada
+const posicionesFiltradas = computed(() => {
+    if (!jugadorPosicionDefault.value) {
+        return posiciones.value;
+    }
+    // Mostrar solo la posición que el jugador tiene configurada
+    return posiciones.value.filter(
+        (pos) => pos.posicionTipoTorneoId === jugadorPosicionDefault.value
+    );
+});
+
 const isTorneoSelected = (torneoId: number): boolean => {
     return (
         torneoAssignments.value[torneoId] !== undefined &&
@@ -273,18 +325,87 @@ const toggleTorneo = (torneoId: number) => {
         // Deseleccionar: eliminar todas las asignaciones
         delete torneoAssignments.value[torneoId];
     } else {
-        // Seleccionar: agregar una asignación vacía
+        // Seleccionar: agregar una asignación vacía con la posición por defecto del jugador
         torneoAssignments.value[torneoId] = [
             {
                 ramaId: null,
                 categoriaId: null,
-                posicionTipoDeporteId: null,
+                posicionTipoDeporteId: jugadorPosicionDefault.value,
                 num: null,
             },
         ];
         // Cargar ramas y categorías para este torneo
         loadRamasYCategorias(torneoId);
     }
+};
+
+// Validar si ya existe una asignación con la misma rama y categoría
+const hasDuplicateAssignment = (
+    torneoId: number,
+    ramaId: number | null,
+    categoriaId: number | null,
+    excludeIndex?: number
+): boolean => {
+    if (!ramaId || !categoriaId) return false;
+    
+    const assignments = torneoAssignments.value[torneoId] || [];
+    return assignments.some((assignment, index) => {
+        if (excludeIndex !== undefined && index === excludeIndex) return false;
+        return (
+            assignment.ramaId === ramaId &&
+            assignment.categoriaId === categoriaId
+        );
+    });
+};
+
+// Verificar si una asignación específica es duplicada
+const isDuplicateAssignment = (
+    torneoId: number,
+    index: number
+): boolean => {
+    const assignments = torneoAssignments.value[torneoId] || [];
+    const assignment = assignments[index];
+    if (!assignment) return false;
+    
+    return hasDuplicateAssignment(
+        torneoId,
+        assignment.ramaId,
+        assignment.categoriaId,
+        index
+    );
+};
+
+// Validar asignación cuando cambia rama o categoría
+const validateAssignment = (torneoId: number, index: number) => {
+    // Pequeño delay para asegurar que el v-model se actualizó
+    setTimeout(() => {
+        const isDuplicate = isDuplicateAssignment(torneoId, index);
+        if (isDuplicate) {
+            errorMessage.value =
+                "No se puede agregar la misma combinación de rama y categoría";
+        } else {
+            // Verificar si hay otros duplicados
+            const assignments = torneoAssignments.value[torneoId] || [];
+            const hasOtherDuplicates = assignments.some((assignment, idx) => {
+                if (idx === index) return false;
+                return hasDuplicateAssignment(
+                    torneoId,
+                    assignment.ramaId,
+                    assignment.categoriaId,
+                    idx
+                );
+            });
+            
+            if (!hasOtherDuplicates) {
+                errorMessage.value = "";
+            }
+        }
+    }, 0);
+};
+
+// Limpiar mensaje de error
+const clearErrorMessage = () => {
+    errorMessage.value = "";
 };
 
 const addAssignment = (torneoId: number) => {
@@ -294,7 +415,7 @@ const addAssignment = (torneoId: number) => {
     torneoAssignments.value[torneoId].push({
         ramaId: null,
         categoriaId: null,
-        posicionTipoDeporteId: null,
+        posicionTipoDeporteId: jugadorPosicionDefault.value,
         num: null,
     });
 };
@@ -305,6 +426,8 @@ const removeAssignment = (torneoId: number, index: number) => {
         if (torneoAssignments.value[torneoId].length === 0) {
             delete torneoAssignments.value[torneoId];
         }
+        // Limpiar mensaje de error si ya no hay duplicados
+        errorMessage.value = "";
     }
 };
 
@@ -313,16 +436,42 @@ const getTorneoAssignments = (torneoId: number): TorneoAssignment[] => {
 };
 
 const getRamasPorTorneo = (torneoId: number): RamaEquipo[] => {
-    return ramasPorTorneo.value[torneoId] || [];
+    const ramasTorneo = ramasPorTorneo.value[torneoId] || [];
+    
+    // Si el jugador no tiene ramas disponibles, retornar todas las del torneo
+    if (jugadorRamasDisponibles.value.length === 0) {
+        return ramasTorneo;
+    }
+    
+    // Filtrar solo las ramas que el jugador tiene disponibles
+    return ramasTorneo.filter((rama) =>
+        jugadorRamasDisponibles.value.includes(rama.ramaId)
+    );
 };
 
 const getCategoriasPorTorneo = (
     torneoId: number,
     ramaId?: number | null
 ): CategoriaEquipo[] => {
-    const categorias = categoriasPorTorneo.value[torneoId] || [];
-    if (!ramaId) return categorias;
-    return categorias.filter((c) => !c.ramaId || c.ramaId === ramaId);
+    const categoriasTorneo = categoriasPorTorneo.value[torneoId] || [];
+    
+    // Filtrar por rama si está seleccionada
+    let categoriasFiltradas = categoriasTorneo;
+    if (ramaId) {
+        categoriasFiltradas = categoriasFiltradas.filter(
+            (c) => !c.ramaId || c.ramaId === ramaId
+        );
+    }
+    
+    // Si el jugador no tiene categorías disponibles, retornar las filtradas por rama
+    if (jugadorCategoriasDisponibles.value.length === 0) {
+        return categoriasFiltradas;
+    }
+    
+    // Filtrar solo las categorías que el jugador tiene disponibles Y que están en el torneo
+    return categoriasFiltradas.filter((categoria) =>
+        jugadorCategoriasDisponibles.value.includes(categoria.categoriaId)
+    );
 };
 
 const loadTorneos = async () => {
@@ -332,7 +481,8 @@ const loadTorneos = async () => {
     try {
         const torneosData = await obtenerTorneosPorEquipo(
             props.equipoId,
-            props.torneoId ?? null
+            props.torneoId ?? null,
+            props.jugadorId ?? null
         );
         torneos.value = torneosData.map((t: any) => ({
             torneoId: t.torneoId,
@@ -384,18 +534,31 @@ const canSubmit = computed(() => {
 
     return selectedTorneos.every((torneoId) => {
         const assignments = torneoAssignments.value[torneoId];
-        return (
-            assignments &&
-            assignments.length > 0 &&
-            assignments.every(
-                (a) =>
-                    a.ramaId !== null &&
-                    a.categoriaId !== null &&
-                    a.posicionTipoDeporteId !== null &&
-                    a.num !== null &&
-                    a.num >= 0
+        if (!assignments || assignments.length === 0) return false;
+        
+        // Verificar que todos los campos estén completos
+        const allFieldsComplete = assignments.every(
+            (a) =>
+                a.ramaId !== null &&
+                a.categoriaId !== null &&
+                a.posicionTipoDeporteId !== null &&
+                a.num !== null &&
+                a.num >= 0
+        );
+        
+        if (!allFieldsComplete) return false;
+        
+        // Verificar que no haya duplicados (misma rama + misma categoría)
+        const hasDuplicates = assignments.some((assignment, index) =>
+            hasDuplicateAssignment(
+                torneoId,
+                assignment.ramaId,
+                assignment.categoriaId,
+                index
             )
         );
+        
+        return !hasDuplicates;
     });
 });
 
@@ -434,8 +597,56 @@ const handleSubmit = async () => {
     }
 };
 
+// Cargar datos del jugador para obtener sus ramas y categorías disponibles
+const loadJugadorData = async () => {
+    if (!props.equipoId || !props.jugadorId) return;
+    
+    try {
+        const jugadores = await fetchJugadores({
+            equipoId: props.equipoId,
+            torneoId: props.torneoId ?? undefined,
+        });
+        
+        const jugador = jugadores.find((j) => j.jugadorId === props.jugadorId);
+        
+        if (jugador && jugador.equipoJugador) {
+            // Extraer las ramas únicas que el jugador tiene disponibles
+            const ramasUnicas = new Set<number>();
+            jugador.equipoJugador.forEach((asignacion) => {
+                if (asignacion.ramaId && asignacion.ramaId > 0) {
+                    ramasUnicas.add(asignacion.ramaId);
+                }
+            });
+            jugadorRamasDisponibles.value = Array.from(ramasUnicas);
+            
+            // Extraer las categorías únicas que el jugador tiene disponibles
+            const categoriasUnicas = new Set<number>();
+            jugador.equipoJugador.forEach((asignacion) => {
+                if (asignacion.categoriaId && asignacion.categoriaId > 0) {
+                    categoriasUnicas.add(asignacion.categoriaId);
+                }
+            });
+            jugadorCategoriasDisponibles.value = Array.from(categoriasUnicas);
+            
+            // Obtener la posición del jugador (tomar la primera asignación que tenga posición)
+            const primeraAsignacionConPosicion = jugador.equipoJugador.find(
+                (asignacion) =>
+                    asignacion.posicionTipoTorneoId &&
+                    asignacion.posicionTipoTorneoId > 0
+            );
+            if (primeraAsignacionConPosicion) {
+                jugadorPosicionDefault.value =
+                    primeraAsignacionConPosicion.posicionTipoTorneoId;
+            }
+        }
+    } catch (error) {
+        console.error("Error loading player data:", error);
+    }
+};
+
 // Cargar datos al montar
 onMounted(async () => {
+    await loadJugadorData();
     await loadTorneos();
     await loadPosiciones();
 });

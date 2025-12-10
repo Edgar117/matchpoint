@@ -470,6 +470,7 @@ export const useEquipoService = () => {
     const obtenerTorneosPorEquipo = async (
         equipoId: number,
         torneoId?: number | null,
+        jugadorId?: number | null,
         sortColumn: string = "torneoId",
         offset: number = 0,
         nextRows: number = 100,
@@ -486,6 +487,10 @@ export const useEquipoService = () => {
             
             if (torneoId !== null && torneoId !== undefined) {
                 params.TorneoId = torneoId;
+            }
+            
+            if (jugadorId !== null && jugadorId !== undefined) {
+                params.JugadorId = jugadorId;
             }
 
             const { data } = await axios.get(

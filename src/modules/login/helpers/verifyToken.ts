@@ -56,11 +56,14 @@ export const verifyExpirationTokenAndRefresh = async () => {
     }
 };
 export const logOff = async () => {
+    
     if (getToken()) {
+        
         const token: TokenResponse = JSON.parse(getToken());
         const decoded = jwt_decode(token.accessToken);
         const emited = moment(decoded.iat * 1000);
         const current_time = moment();
+      //  console.log(decoded);
 
         if (current_time.diff(emited, "minutes") >= 30) {
             localStorage.clear();
