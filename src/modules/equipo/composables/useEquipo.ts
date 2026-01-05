@@ -161,7 +161,6 @@ export const useEquipo = () => {
             sortColumn:
                 sortBy.value.length > 0 ? sortBy.value[0].key : "equipoId",
             SortDir: sortBy.value.length > 0 ? sortBy.value[0].order : "asc",
-            empresaId: 0,
         };
     };
 
