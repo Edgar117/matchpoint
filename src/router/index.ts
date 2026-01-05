@@ -3,6 +3,8 @@ import { RouteRecordRaw, createRouter, createWebHistory } from "vue-router";
 // screens
 import LoginScreen from "../modules/login/screens/LoginPage.vue";
 import storeFront from "../modules/storeFront/screens/Home.vue";
+import TodosLosTorneos from "../modules/storeFront/screens/TodosLosTorneos.vue";
+import DetalleTorneo from "../modules/storeFront/screens/DetalleTorneo.vue";
 import { getTokenInformation } from "@/helpers/localstorageHandler";
 
 const routes: RouteRecordRaw[] = [
@@ -16,6 +18,18 @@ const routes: RouteRecordRaw[] = [
         path: "/inicio",
         name: "inicio",
         component: storeFront,
+        meta: { requireAuth: false },
+    },
+    {
+        path: "/torneos",
+        name: "TodosLosTorneos",
+        component: TodosLosTorneos,
+        meta: { requireAuth: false },
+    },
+    {
+        path: "/torneo/:id",
+        name: "DetalleTorneo",
+        component: DetalleTorneo,
         meta: { requireAuth: false },
     },
     {

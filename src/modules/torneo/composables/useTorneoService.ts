@@ -197,6 +197,51 @@ export const useTorneoService = () => {
         });
     };
 
+    /**
+     * Retrieves a list of public tournaments.
+     * @param params - Query parameters for filtering and pagination.
+     * @returns Object with tournaments data and total count.
+     */
+    const fetchTorneosPublicos = async (params: {
+        EmpresaId?: number;
+        SortColumn?: string;
+        Offset?: number;
+        Next_Rows?: number;
+        SortDirection?: "ASC" | "DESC";
+    } = {}) => {
+        try {
+            const queryParams = buildParams({
+                EmpresaId: params.EmpresaId ?? 0,
+                SortColumn: params.SortColumn ?? "fechaInicio",
+                Offset: params.Offset ?? 0,
+                Next_Rows: params.Next_Rows ?? 10,
+                SortDirection: params.SortDirection ?? "ASC",
+            });
+
+            const { data } = await axios.get<{
+                data: Torneo[];
+                totalCount: number;
+            }>(`${URLS.COTBUILDER}/api/TorneoPublico`, {
+                params: queryParams,
+            });
+
+            return {
+                tournaments: data.data || [],
+                totalCount: data.totalCount || 0,
+            };
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Something went wrong, contact the system administrator`,
+                type: "error",
+                valueModel: true,
+            });
+            return {
+                tournaments: [],
+                totalCount: 0,
+            };
+        }
+    };
+
     return {
         createTorneo,
         selectTorneo,
@@ -204,6 +249,7 @@ export const useTorneoService = () => {
         deleteTorneo,
         selImagenTorneo,
         selectTypeTorneo,
-        selectEmpresaTorneo
+        selectEmpresaTorneo,
+        fetchTorneosPublicos,
     };
 };

@@ -180,36 +180,37 @@
 
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <div
-                        v-for="tournament in tournaments"
-                        :key="tournament.id"
+                        v-for="tournament in displayedTournaments"
+                        :key="tournament.torneoId"
                         class="bg-card rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 group"
                     >
                         <div class="relative overflow-hidden">
                             <img
-                                :src="tournament.image"
-                                :alt="tournament.name"
+                                :src="getTournamentImage(tournament)"
+                                :alt="tournament.nombre"
                                 class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
                             />
                             <div
                                 class="absolute top-4 right-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-semibold"
                             >
-                                {{ tournament.status }}
+                                {{ tournament.estatus || 'Disponible' }}
                             </div>
                         </div>
                         <div class="p-6">
                             <h4
                                 class="text-xl font-bold mb-2 text-card-foreground"
                             >
-                                {{ tournament.name }}
+                                {{ tournament.nombre }}
                             </h4>
-                            <p class="text-muted-foreground mb-4">
-                                {{ tournament.description }}
+                            <p class="text-muted-foreground mb-4 line-clamp-2">
+                                {{ tournament.descripcion }}
                             </p>
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-muted-foreground">{{
-                                    tournament.date
+                                    formatDateRange(tournament.fechaInicio, tournament.fechaFin)
                                 }}</span>
                                 <button
+                                    @click="goToTournamentDetail(tournament.torneoId)"
                                     class="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:bg-secondary/90 transition-colors"
                                 >
                                     Ver Más
@@ -217,6 +218,14 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <div v-if="totalTournaments > 3" class="text-center mt-12">
+                    <button
+                        @click="goToAllTournaments"
+                        class="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-semibold text-lg hover:bg-primary/90 transition-all transform hover:scale-105 shadow-lg"
+                    >
+                        Ver Todos los Torneos
+                    </button>
                 </div>
             </div>
         </section>
@@ -729,7 +738,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { storeToRefs } from "pinia";
 import { useLoginStore } from "../../login/store/state";
 const { user } = storeToRefs(useLoginStore());
@@ -737,41 +746,70 @@ const { user } = storeToRefs(useLoginStore());
 import { getCurrentUser } from "../../../helpers/localstorageHandler";
 const value = getCurrentUser();
 import router from "@/router";
+import { useTorneoService } from "../../torneo/composables/useTorneoService";
+import { Torneo } from "@/interfaces/Torneo";
+import { URLS } from "@/helpers/constants";
 
 if (value) {
     user.value = JSON.parse(value);
 }
 
 const tournamentsSection = ref(null);
+const { fetchTorneosPublicos, selImagenTorneo } = useTorneoService();
 
-const tournaments = ref([
-    {
-        id: 1,
-        name: "Copa Nacional 2024",
-        description:
-            "El torneo más prestigioso del país con 32 equipos compitiendo por la gloria.",
-        date: "15 Mar - 20 Abr",
-        status: "Inscripciones Abiertas",
-        image: "https://img.freepik.com/vector-gratis/diseno-fondo-torneo-baloncesto-abstracto_1017-39244.jpg",
-    },
-    {
-        id: 2,
-        name: "Liga Juvenil",
-        description: "Competencia para jóvenes talentos menores de 18 años.",
-        date: "1 Feb - 15 Mar",
-        status: "En Curso",
-        image: "https://img.freepik.com/vector-gratis/diseno-fondo-torneo-baloncesto-abstracto_1017-39244.jpg",
-    },
-    {
-        id: 3,
-        name: "Torneo Universitario",
-        description:
-            "Las mejores universidades se enfrentan en este emocionante torneo.",
-        date: "10 May - 25 Jun",
-        status: "Próximamente",
-        image: "https://img.freepik.com/vector-gratis/diseno-fondo-torneo-baloncesto-abstracto_1017-39244.jpg",
-    },
-]);
+const tournaments = ref<Torneo[]>([]);
+const totalTournaments = ref(0);
+const loadingTournaments = ref(false);
+
+const displayedTournaments = computed(() => {
+    return tournaments.value.slice(0, 3);
+});
+
+const getTournamentImage = (tournament: Torneo): string => {
+    // Use placeholder image for now, or construct URL if needed
+    return "https://img.freepik.com/vector-gratis/diseno-fondo-torneo-baloncesto-abstracto_1017-39244.jpg";
+};
+
+const formatDateRange = (fechaInicio: string | Date | null, fechaFin: string | Date | null): string => {
+    if (!fechaInicio || !fechaFin) return "Fecha por definir";
+    
+    const start = new Date(fechaInicio);
+    const end = new Date(fechaFin);
+    
+    const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+    
+    const startStr = `${start.getDate()} ${months[start.getMonth()]}`;
+    const endStr = `${end.getDate()} ${months[end.getMonth()]}`;
+    
+    return `${startStr} - ${endStr}`;
+};
+
+const goToTournamentDetail = (torneoId: number) => {
+    router.push({ name: "DetalleTorneo", params: { id: torneoId } });
+};
+
+const goToAllTournaments = () => {
+    router.push({ name: "TodosLosTorneos" });
+};
+
+const loadTournaments = async () => {
+    try {
+        loadingTournaments.value = true;
+        const result = await fetchTorneosPublicos({
+            EmpresaId: 0,
+            SortColumn: "fechaInicio",
+            Offset: 0,
+            Next_Rows: 10,
+            SortDirection: "ASC",
+        });
+        tournaments.value = result.tournaments;
+        totalTournaments.value = result.totalCount;
+    } catch (error) {
+        console.error("Error loading tournaments:", error);
+    } finally {
+        loadingTournaments.value = false;
+    }
+};
 
 const stats = ref([
     { label: "Equipos Activos", value: "156" },
@@ -945,6 +983,6 @@ const latestNews = ref([
     },
 ]);
 onMounted(() => {
-    // Animaciones adicionales se pueden agregar aquí
+    loadTournaments();
 });
 </script>

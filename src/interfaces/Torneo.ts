@@ -1,15 +1,18 @@
 export interface Torneo {
     empresaId: number | null;
+    empresa?: string;
     torneoId: number;
     clave: string;
     nombre: string;
     descripcion: string;
-    fechaInicio: Date | null;
-    fechaFin: Date | null;
+    fechaInicio: Date | string | null;
+    fechaFin: Date | string | null;
     tipoTorneoId: number | null;
+    tipoTorneo?: string;
     logo: string;
-    extensionImg: string;
+    extensionImg?: string;
     esPublico: boolean;
+    estatus?: string;
 }
 
 export interface TorneoRequestParams extends Torneo {
