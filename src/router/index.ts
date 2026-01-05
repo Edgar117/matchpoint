@@ -46,10 +46,13 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
     const user = getTokenInformation();
 
+    // Rutas públicas que no requieren autenticación
+    const publicRoutes = ["Login", "inicio", "TodosLosTorneos", "DetalleTorneo"];
+
     if (user === null) {
         // 🚫 Si no hay sesión
-        if (to.name === "Login" || to.name === "inicio") {
-            next(); // dejar entrar a login o inicio
+        if (publicRoutes.includes(to.name as string)) {
+            next(); // permitir acceso a rutas públicas
         } else {
             next({ name: "inicio" }); // redirigir cualquier otra ruta a inicio
         }
@@ -58,7 +61,7 @@ router.beforeEach((to, from, next) => {
         if (to.name === "Login") {
             next({ name: "inicio" }); // si ya está logueado, no permitir login
         } else {
-            next(); // dejar pasar a inicio u otra (si existiera)
+            next(); // dejar pasar a cualquier ruta
         }
     }
 });

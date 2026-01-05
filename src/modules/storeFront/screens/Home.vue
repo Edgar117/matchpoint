@@ -51,9 +51,7 @@
                         <a
                             href="#"
                             @click="
-                                router.push(
-                                       user != null ? 'Home' : 'Login'
-                                )
+                                router.push(user != null ? 'Home' : 'Login')
                             "
                             class="text-foreground hover:text-primary transition-colors font-medium"
                             >{{
@@ -83,7 +81,7 @@
                                 />
                             </svg>
                         </div>
-                        <button 
+                        <button
                             @click.stop="isMenuOpen = !isMenuOpen"
                             class="md:hidden p-2 bg-white rounded hover:bg-muted transition-colors"
                             :class="{ 'bg-primary/10': isMenuOpen }"
@@ -120,7 +118,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Mobile Menu -->
             <Transition
                 enter-active-class="transition ease-out duration-200"
@@ -134,45 +132,43 @@
                     v-if="isMenuOpen"
                     class="md:hidden bg-background border-t border-border shadow-lg"
                 >
-                <nav class="flex flex-col py-4 px-4 space-y-2">
-                    <a
-                        href="#"
-                        class="text-foreground hover:text-primary transition-colors font-medium py-2 px-4 rounded-lg hover:bg-muted"
-                        @click="isMenuOpen = false"
-                        >Torneos</a
-                    >
-                    <a
-                        href="#"
-                        class="text-foreground hover:text-primary transition-colors font-medium py-2 px-4 rounded-lg hover:bg-muted"
-                        @click="isMenuOpen = false"
-                        >Equipos</a
-                    >
-                    <a
-                        href="#"
-                        class="text-foreground hover:text-primary transition-colors font-medium py-2 px-4 rounded-lg hover:bg-muted"
-                        @click="isMenuOpen = false"
-                        >Estadísticas</a
-                    >
-                    <a
-                        href="#"
-                        class="text-foreground hover:text-primary transition-colors font-medium py-2 px-4 rounded-lg hover:bg-muted"
-                        @click="isMenuOpen = false"
-                        >Partidos</a
-                    >
-                    <a
-                        href="#"
-                        @click="
-                            router.push(
-                                   user != null ? 'Home' : 'Login'
-                            );
-                            isMenuOpen = false;
-                        "
-                        class="text-foreground hover:text-primary transition-colors font-medium py-2 px-4 rounded-lg hover:bg-muted"
-                        >{{
-                            user != null ? "Ir al panel" : "Iniciar Sesión"
-                        }}</a
-                    >
-                </nav>
+                    <nav class="flex flex-col py-4 px-4 space-y-2">
+                        <a
+                            href="#"
+                            class="text-foreground hover:text-primary transition-colors font-medium py-2 px-4 rounded-lg hover:bg-muted"
+                            @click="isMenuOpen = false"
+                            >Torneos</a
+                        >
+                        <a
+                            href="#"
+                            class="text-foreground hover:text-primary transition-colors font-medium py-2 px-4 rounded-lg hover:bg-muted"
+                            @click="isMenuOpen = false"
+                            >Equipos</a
+                        >
+                        <a
+                            href="#"
+                            class="text-foreground hover:text-primary transition-colors font-medium py-2 px-4 rounded-lg hover:bg-muted"
+                            @click="isMenuOpen = false"
+                            >Estadísticas</a
+                        >
+                        <a
+                            href="#"
+                            class="text-foreground hover:text-primary transition-colors font-medium py-2 px-4 rounded-lg hover:bg-muted"
+                            @click="isMenuOpen = false"
+                            >Partidos</a
+                        >
+                        <a
+                            href="#"
+                            @click="
+                                router.push(user != null ? 'Home' : 'Login');
+                                isMenuOpen = false;
+                            "
+                            class="text-foreground hover:text-primary transition-colors font-medium py-2 px-4 rounded-lg hover:bg-muted"
+                            >{{
+                                user != null ? "Ir al panel" : "Iniciar Sesión"
+                            }}</a
+                        >
+                    </nav>
                 </div>
             </Transition>
         </header>
@@ -203,7 +199,6 @@
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <button
-
                         class="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-semibold text-lg hover:bg-primary/90 transition-all transform hover:scale-105 shadow-lg"
                     >
                         Ver Torneos
@@ -261,11 +256,12 @@
                                 :src="getTournamentImage(tournament)"
                                 :alt="tournament.nombre"
                                 class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
+                                @error="handleImageError"
                             />
                             <div
                                 class="absolute top-4 right-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-semibold"
                             >
-                                {{ tournament.estatus || 'Disponible' }}
+                                {{ tournament.estatus || "Disponible" }}
                             </div>
                         </div>
                         <div class="p-6">
@@ -279,10 +275,17 @@
                             </p>
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-muted-foreground">{{
-                                    formatDateRange(tournament.fechaInicio, tournament.fechaFin)
+                                    formatDateRange(
+                                        tournament.fechaInicio,
+                                        tournament.fechaFin
+                                    )
                                 }}</span>
                                 <button
-                                    @click="goToTournamentDetail(tournament.torneoId)"
+                                    @click="
+                                        goToTournamentDetail(
+                                            tournament.torneoId
+                                        )
+                                    "
                                     class="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:bg-secondary/90 transition-colors"
                                 >
                                     Ver Más
@@ -810,7 +813,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted,computed } from "vue";
+import { ref, onUnmounted, computed, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useLoginStore } from "../../login/store/state";
 const { user } = storeToRefs(useLoginStore());
@@ -844,7 +847,7 @@ onMounted(() => {
 onUnmounted(() => {
     document.removeEventListener("click", handleClickOutside);
 });
-const { fetchTorneosPublicos, selImagenTorneo } = useTorneoService();
+const { fetchTorneosPublicos } = useTorneoService();
 
 const tournaments = ref<Torneo[]>([]);
 const totalTournaments = ref(0);
@@ -855,21 +858,47 @@ const displayedTournaments = computed(() => {
 });
 
 const getTournamentImage = (tournament: Torneo): string => {
-    // Use placeholder image for now, or construct URL if needed
+    if (tournament.logo && tournament.torneoId) {
+        return `${URLS.COTBUILDER}/api/Torneo/logo/${tournament.torneoId}/${tournament.logo}`;
+    }
+    // Fallback placeholder image
     return "https://img.freepik.com/vector-gratis/diseno-fondo-torneo-baloncesto-abstracto_1017-39244.jpg";
 };
 
-const formatDateRange = (fechaInicio: string | Date | null, fechaFin: string | Date | null): string => {
+const handleImageError = (event: Event) => {
+    const target = event.target as HTMLImageElement;
+    if (target) {
+        target.src = "https://img.freepik.com/vector-gratis/diseno-fondo-torneo-baloncesto-abstracto_1017-39244.jpg";
+    }
+};
+
+const formatDateRange = (
+    fechaInicio: string | Date | null,
+    fechaFin: string | Date | null
+): string => {
     if (!fechaInicio || !fechaFin) return "Fecha por definir";
-    
+
     const start = new Date(fechaInicio);
     const end = new Date(fechaFin);
-    
-    const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-    
+
+    const months = [
+        "Ene",
+        "Feb",
+        "Mar",
+        "Abr",
+        "May",
+        "Jun",
+        "Jul",
+        "Ago",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dic",
+    ];
+
     const startStr = `${start.getDate()} ${months[start.getMonth()]}`;
     const endStr = `${end.getDate()} ${months[end.getMonth()]}`;
-    
+
     return `${startStr} - ${endStr}`;
 };
 

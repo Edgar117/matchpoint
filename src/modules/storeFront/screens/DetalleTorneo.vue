@@ -83,6 +83,7 @@
                             :src="getTournamentImage(tournament)"
                             :alt="tournament.nombre"
                             class="w-full h-full object-cover"
+                            @error="handleImageError"
                         />
                         <div
                             class="absolute top-6 right-6 bg-primary text-primary-foreground px-4 py-2 rounded-full text-sm font-semibold"
@@ -268,6 +269,7 @@ import { useRoute } from "vue-router";
 import router from "@/router";
 import { useTorneoService } from "../../torneo/composables/useTorneoService";
 import { Torneo } from "@/interfaces/Torneo";
+import { URLS } from "@/helpers/constants";
 
 const route = useRoute();
 const { fetchTorneosPublicos } = useTorneoService();
@@ -276,7 +278,18 @@ const tournament = ref<Torneo | null>(null);
 const loading = ref(false);
 
 const getTournamentImage = (tournament: Torneo): string => {
+    if (tournament.logo && tournament.torneoId) {
+        return `${URLS.COTBUILDER}/api/Torneo/logo/${tournament.torneoId}/${tournament.logo}`;
+    }
+    // Fallback placeholder image
     return "https://img.freepik.com/vector-gratis/diseno-fondo-torneo-baloncesto-abstracto_1017-39244.jpg";
+};
+
+const handleImageError = (event: Event) => {
+    const target = event.target as HTMLImageElement;
+    if (target) {
+        target.src = "https://img.freepik.com/vector-gratis/diseno-fondo-torneo-baloncesto-abstracto_1017-39244.jpg";
+    }
 };
 
 const formatDate = (date: string | Date | null): string => {
