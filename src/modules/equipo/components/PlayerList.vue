@@ -27,8 +27,14 @@
             >
               <td class="py-4 px-4">
                 <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-orange-500 rounded-full flex items-center justify-center text-white font-bold">
-                    {{ player.name.charAt(0) }}
+                  <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-purple-500 to-orange-500 relative">
+                    <img
+                      v-if="player.logo && !imageErrors[player.jugadorId]"
+                      :src="getPlayerImageUrl(player)"
+                      :alt="player.name"
+                      class="w-full h-full object-cover absolute inset-0"
+                      @error="() => handleImageError(player.jugadorId)"
+                    />
                   </div>
                   <div>
                     <span class="font-medium text-slate-900 block">{{ player.name }}</span>
@@ -65,6 +71,21 @@
                     <Eye class="w-4 h-4" />
                   </button>
                   <button
+                    @click="emit('editPlayer', player)"
+                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Editar jugador"
+                  >
+                    <Pencil class="w-4 h-4" />
+                  </button>
+                  <button
+                    v-if="props.equipoId"
+                    @click="openTournamentAssignmentModal(player)"
+                    class="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                    title="Asignar a torneo"
+                  >
+                    <Trophy class="w-4 h-4" />
+                  </button>
+                  <button
                     @click="emit('deletePlayer', player.jugadorId.toString())"
                     class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Eliminar jugador"
@@ -90,8 +111,14 @@
         <v-card-title class="bg-gradient-to-r from-purple-600 to-orange-500 text-white px-6 py-4">
           <div class="flex items-center justify-between w-full">
             <div class="flex items-center gap-3">
-              <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                {{ selectedPlayer.name.charAt(0) }}
+              <div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-white/20 relative">
+                <img
+                  v-if="selectedPlayer.logo && selectedPlayer.jugadorId && !imageErrors[selectedPlayer.jugadorId]"
+                  :src="getPlayerImageUrl(selectedPlayer)"
+                  :alt="selectedPlayer.name"
+                  class="w-full h-full object-cover absolute inset-0"
+                  @error="() => handleImageError(selectedPlayer?.jugadorId ?? 0)"
+                />
               </div>
               <div>
                 <h3 class="text-xl font-bold">{{ selectedPlayer.name }}</h3>
@@ -166,13 +193,75 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Modal de Asignación a Torneos -->
+    <v-dialog v-model="showTournamentAssignmentModal" max-width="1000px" persistent scrollable>
+      <v-card class="rounded-xl">
+        <v-card-title class="bg-gradient-to-r from-orange-600 to-purple-500 text-white px-6 py-4">
+          <div class="flex items-center justify-between w-full">
+            <div>
+              <h3 class="text-xl font-bold">Asignar Jugador a Torneos</h3>
+              <p class="text-sm text-white/80" v-if="selectedPlayerForTournament">
+                {{ selectedPlayerForTournament.name }}
+              </p>
+            </div>
+            <v-btn
+              icon
+              variant="text"
+              color="white"
+              @click="closeTournamentAssignmentModal"
+              class="hover:bg-white/20"
+            >
+              <v-icon>mdi-close</v-icon>
+            </v-btn>
+          </div>
+        </v-card-title>
+
+        <v-card-text class="px-6 py-6">
+          <PlayerTournamentAssignment
+            v-if="selectedPlayerForTournament && props.equipoId"
+            ref="tournamentAssignmentRef"
+            :equipo-id="props.equipoId"
+            :jugador-id="selectedPlayerForTournament.jugadorId"
+            :jugador-nombre="selectedPlayerForTournament.name"
+            :torneo-id="props.torneoId"
+            :tipo-deporte-id="props.tipoDeporteId"
+            @assigned="handleTournamentAssigned"
+            @cancel="closeTournamentAssignmentModal"
+          />
+        </v-card-text>
+
+        <v-card-actions class="px-6 py-4 bg-slate-50">
+          <v-spacer></v-spacer>
+          <v-btn
+            variant="outlined"
+            color="grey"
+            @click="closeTournamentAssignmentModal"
+            class="px-6"
+          >
+            Cancelar
+          </v-btn>
+          <v-btn
+            color="orange"
+            variant="flat"
+            @click="handleTournamentSubmit"
+            :disabled="!canSubmitTournament"
+            class="px-6"
+          >
+            Asignar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { CheckCircle, Clock, Trash2, Users, Eye } from 'lucide-vue-next'
+import { CheckCircle, Clock, Trash2, Users, Eye, Pencil, Trophy } from 'lucide-vue-next'
 import type { EquipoJugadorAsignacion, RamaEquipo, CategoriaEquipo } from '@/interfaces/Jugador'
+import { URLS } from '@/helpers/constants'
+import PlayerTournamentAssignment from './PlayerTournamentAssignment.vue'
 
 interface Player {
   id: string
@@ -181,6 +270,8 @@ interface Player {
   age: number | null
   curp?: string
   fechaNacimiento?: string | null
+  logo?: string
+  extensionImg?: string
   equipoJugador: EquipoJugadorAsignacion[]
 }
 
@@ -189,14 +280,23 @@ const props = defineProps<{
   isLoading?: boolean
   ramas?: RamaEquipo[]
   categorias?: CategoriaEquipo[]
+  equipoId?: number
+  torneoId?: number | null
+  tipoDeporteId?: number | null
 }>()
 
 const emit = defineEmits<{
   deletePlayer: [playerId: string]
+  editPlayer: [player: Player]
+  refresh: []
 }>()
 
 const showDetailsModal = ref(false)
 const selectedPlayer = ref<Player | null>(null)
+const imageErrors = ref<Record<number, boolean>>({})
+const showTournamentAssignmentModal = ref(false)
+const selectedPlayerForTournament = ref<Player | null>(null)
+const tournamentAssignmentRef = ref<InstanceType<typeof PlayerTournamentAssignment> | null>(null)
 
 const formatDate = (value: string) => {
   const date = new Date(value)
@@ -246,5 +346,52 @@ const openDetailsModal = (player: Player) => {
 const closeDetailsModal = () => {
   showDetailsModal.value = false
   selectedPlayer.value = null
+}
+
+// Función para construir la URL de la imagen del jugador
+const getPlayerImageUrl = (player: Player): string => {
+  if (!player.logo || !player.jugadorId) return ''
+  
+  // Construir el nombre del logo completo
+  // Si el logo ya incluye la extensión, usarlo tal cual
+  // Si no, agregar la extensión desde extensionImg
+  let nombreLogo = player.logo
+  if (!nombreLogo.includes('.')) {
+    const extension = player.extensionImg || 'jpg'
+    nombreLogo = `${nombreLogo}.${extension}`
+  }
+  
+  // Construir la URL del endpoint
+  return `${URLS.COTBUILDER}/api/Jugador/logo/${player.jugadorId}/${nombreLogo}`
+}
+
+// Manejar error al cargar imagen
+const handleImageError = (jugadorId: number) => {
+  imageErrors.value[jugadorId] = true
+}
+
+const openTournamentAssignmentModal = (player: Player) => {
+  selectedPlayerForTournament.value = player
+  showTournamentAssignmentModal.value = true
+}
+
+const closeTournamentAssignmentModal = () => {
+  showTournamentAssignmentModal.value = false
+  selectedPlayerForTournament.value = null
+}
+
+const canSubmitTournament = computed(() => {
+  return tournamentAssignmentRef.value?.canSubmit ?? false
+})
+
+const handleTournamentSubmit = async () => {
+  if (tournamentAssignmentRef.value) {
+    await tournamentAssignmentRef.value.handleSubmit()
+  }
+}
+
+const handleTournamentAssigned = () => {
+  closeTournamentAssignmentModal()
+  emit('refresh')
 }
 </script>

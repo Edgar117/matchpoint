@@ -3,11 +3,9 @@
 </template>
 <script setup lang="ts">
 import { onMounted } from "vue";
-import { useSocketStore } from "./store/socketStore";
-const socketStore = useSocketStore();
 onMounted(async () => {
     document.body.className = "";
-    await socketStore.initSocket();
+    
 });
 </script>
 

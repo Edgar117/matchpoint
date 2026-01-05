@@ -1,5 +1,5 @@
 export interface TokenResponse {
     isSuccess: boolean;
-    token: string;
+    accessToken: string;
     refreshToken: string;
 }

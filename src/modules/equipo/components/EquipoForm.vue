@@ -135,7 +135,7 @@
                 variant="underlined"
                 item-value="tipoTorneoId"
                 item-title="tipoTorneo"
-                v-model="tipoDeporteSeleccionado"
+                v-model="fields.tipoDeporteId"
                 @update:model-value="handleTipoDeporteChange"
             ></v-autocomplete>
             

@@ -51,6 +51,7 @@ export const useEquipoService = () => {
                 esRamaMixto: equipoData.esRamaMixto,
                 extensionImg: equipoData.extensionImg, // si no tienes, lo puedes dejar vacío
                 categorias: categoriasTransformadas,
+                tipoDeporteId: equipoData.tipoDeporteId,
             };
 
             const response = await axios.post(
@@ -466,6 +467,75 @@ export const useEquipoService = () => {
         }
     };
 
+    const obtenerTorneosPorEquipo = async (
+        equipoId: number,
+        torneoId?: number | null,
+        jugadorId?: number | null,
+        sortColumn: string = "torneoId",
+        offset: number = 0,
+        nextRows: number = 100,
+        sortDirection: string = "ASC"
+    ) => {
+        try {
+            const params: any = {
+                EquipoId: equipoId,
+                SortColumn: sortColumn,
+                Offset: offset,
+                Next_Rows: nextRows,
+                SortDirection: sortDirection,
+            };
+            
+            if (torneoId !== null && torneoId !== undefined) {
+                params.TorneoId = torneoId;
+            }
+            
+            if (jugadorId !== null && jugadorId !== undefined) {
+                params.JugadorId = jugadorId;
+            }
+
+            const { data } = await axios.get(
+                `${URLS.COTBUILDER}/api/Equipo/ObtenerTorneos`,
+                { params }
+            );
+
+            const source: any = data;
+            const collection = Array.isArray(source?.data)
+                ? source.data
+                : Array.isArray(source)
+                ? source
+                : [];
+
+            return collection.map((item: any) => ({
+                empresaId: item.empresaId ?? item.EmpresaId ?? 0,
+                empresa: item.empresa ?? item.Empresa ?? "",
+                equipoId: item.equipoId ?? item.EquipoId ?? 0,
+                entrenador: item.entrenador ?? item.Entrenador ?? "",
+                nombre: item.nombre ?? item.Nombre ?? "",
+                descripcion: item.descripcion ?? item.Descripcion ?? "",
+                pais: item.pais ?? item.Pais ?? "",
+                estado: item.estado ?? item.Estado ?? "",
+                poblacion: item.poblacion ?? item.Poblacion ?? "",
+                colonia: item.colonia ?? item.Colonia ?? "",
+                tipoDeporteId: item.tipoDeporteId ?? item.TipoDeporteId ?? 0,
+                tipoDeporte: item.tipoDeporte ?? item.TipoDeporte ?? "",
+                logo: item.logo ?? item.Logo ?? "",
+                esRamaVaronil: item.esRamaVaronil ?? item.EsRamaVaronil ?? false,
+                esRamaFemenil: item.esRamaFemenil ?? item.EsRamaFemenil ?? false,
+                esRamaMixto: item.esRamaMixto ?? item.EsRamaMixto ?? false,
+                categorias: item.categorias ?? item.Categorias ?? "",
+                // Agregar torneoId si viene en la respuesta
+                torneoId: item.torneoId ?? item.TorneoId ?? torneoId ?? 0,
+            }));
+        } catch (error) {
+            handleShowSnackbar({
+                text: `No fue posible obtener los torneos del equipo`,
+                type: "error",
+                valueModel: true,
+            });
+            return [];
+        }
+    };
+
     return {
         createEquipo,
         selectEquipo,
@@ -478,5 +548,6 @@ export const useEquipoService = () => {
         selectTypeTorneo,
         selectPosicionesTipoTorneo,
         selectEmpresaTorneo,
+        obtenerTorneosPorEquipo,
     };
 };

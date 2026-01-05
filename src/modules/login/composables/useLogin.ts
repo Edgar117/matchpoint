@@ -33,18 +33,18 @@ export const useLogin = () => {
                 headers: headers,
                 method: "POST",
                 baseURL: URLS.COTBUILDER,
-                url: "api/Acceso/Token",
+                url: "api/Acceso/Login",
                 data: {
                     correo: payload.email,
                     clave: payload.password,
                 },
             });
-            debugger;
+
             if (data.isSuccess) {
 
                 //Save the token us
                 saveToken(data);
-                const token_inf = jwt_decode(data.token);
+                const token_inf = jwt_decode(data.accessToken);
                 console.log(token_inf)
                 const userData = transformUser(payload, token_inf, JSON.parse( token_inf.Rols));
                 userStore.value = userData;

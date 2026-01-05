@@ -43,6 +43,7 @@ export const useTorneo = () => {
     const sortBy = ref<SortItem[]>([]);
     const showPassword = ref(false);
     const location = ref("");
+    const showBottomAsignacionEquipos = ref(false);
     //Funciones
     const closeModal = () => {
         showBottom.value = false;
@@ -62,6 +63,10 @@ export const useTorneo = () => {
         action.value = "DELETE";
         fillFields(item);
         showConfirmationDialog.value = true;
+    };
+    const handleShowAsignarEquipos = (item: Torneo) => {
+        fillFields(item);
+        showBottomAsignacionEquipos.value = true;
     };
     const handleSave = async (ConnectionData: Torneo) => {
         // ConnectionData.torneoId = user.value?.user.idIDM;
@@ -272,5 +277,7 @@ export const useTorneo = () => {
         selImagenTorneo,
         selectTypeTorneo,
         selectEmpresaTorneo,
+        showBottomAsignacionEquipos,
+        handleShowAsignarEquipos,
     };
 };

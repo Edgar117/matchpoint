@@ -141,7 +141,12 @@
                             :is-loading="loadingPlayers"
                             :ramas="ramas"
                             :categorias="categorias"
+                            :equipo-id="props.equipoId"
+                            :torneo-id="props.torneoId"
+                            :tipo-deporte-id="tipoDeporteId"
                             @delete-player="handleDeletePlayer"
+                            @edit-player="handleEditPlayer"
+                            @refresh="loadPlayers"
                         />
                         <TeamAssignment
                             v-if="activeTab === 'assign'"
@@ -155,6 +160,95 @@
             </div>
         </div>
     </v-dialog>
+
+    <!-- Modal de Edición de Jugador -->
+    <v-dialog v-model="showEditModal" max-width="900px" persistent scrollable>
+        <v-card class="rounded-xl">
+            <v-card-title class="bg-gradient-to-r from-purple-600 to-orange-500 text-white px-6 py-4">
+                <div class="flex items-center justify-between w-full">
+                    <h3 class="text-xl font-bold">Editar Jugador</h3>
+                    <v-btn
+                        icon
+                        variant="text"
+                        color="white"
+                        @click="closeEditModal"
+                        class="hover:bg-white/20"
+                    >
+                        <v-icon>mdi-close</v-icon>
+                    </v-btn>
+                </div>
+            </v-card-title>
+
+            <v-card-text class="px-6 py-6">
+                <PlayerForm
+                    v-if="editingPlayer"
+                    :equipo-id="props.equipoId"
+                    :torneo-id="props.torneoId"
+                    :tipo-deporte-id="tipoDeporteId"
+                    :ramas="ramas"
+                    :categorias="categorias"
+                    :is-saving="savingPlayer"
+                    :edit-player="editingPlayer"
+                    @submit="handlePlayerUpdated"
+                />
+            </v-card-text>
+        </v-card>
+    </v-dialog>
+
+    <!-- Modal de Confirmación de Eliminación -->
+    <v-dialog v-model="showDeleteModal" max-width="500px" persistent>
+        <v-card class="rounded-xl">
+            <v-card-text class="px-6 py-6">
+                <div class="flex flex-col items-center text-center">
+                    <!-- Ícono de advertencia -->
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    
+                    <!-- Título -->
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">
+                        ¿Eliminar Participante?
+                    </h3>
+                    
+                    <!-- Mensaje -->
+                    <p class="text-slate-600 mb-2">
+                        Estás a punto de eliminar a
+                    </p>
+                    <p class="text-lg font-bold text-slate-900 mb-4">
+                        {{ playerToDelete?.name || 'este participante' }}
+                    </p>
+                    
+                    <!-- Advertencia -->
+                    <p class="text-sm text-slate-500 mb-6">
+                        Esta acción no se puede deshacer. El participante será removido del torneo.
+                    </p>
+                    
+                    <!-- Botones -->
+                    <div class="flex gap-3 w-full">
+                        <v-btn
+                            variant="outlined"
+                            color="grey"
+                            @click="showDeleteModal = false"
+                            class="flex-1"
+                        >
+                            Cancelar
+                        </v-btn>
+                        <v-btn
+                            color="red"
+                            variant="flat"
+                            @click="confirmDelete"
+                            class="flex-1"
+                        >
+                            <Trash2 class="w-4 h-4 mr-2" />
+                            Eliminar
+                        </v-btn>
+                    </div>
+                </div>
+            </v-card-text>
+        </v-card>
+    </v-dialog>
 </template>
 
 <script setup lang="ts">
@@ -165,7 +259,7 @@ import {
     Trophy,
     UserPlus,
     List,
-    UsersRound,
+    Trash2,
 } from "lucide-vue-next";
 import PlayerForm from "./PlayerForm.vue";
 import PlayerList from "./PlayerList.vue";
@@ -214,6 +308,8 @@ interface Player {
     age: number | null;
     curp?: string;
     fechaNacimiento?: string | null;
+    logo?: string;
+    extensionImg?: string;
     equipoJugador: EquipoJugadorAsignacion[]; // Todas las asignaciones del jugador
 }
 
@@ -247,6 +343,26 @@ const players = ref<Player[]>([]);
 const loadingCatalogs = ref(false);
 const loadingPlayers = ref(false);
 const savingPlayer = ref(false);
+const showEditModal = ref(false);
+const editingPlayer = ref<{
+    jugadorId: number;
+    nombre: string;
+    apellidoPaterno: string;
+    apellidoMaterno: string;
+    curp: string;
+    fechaNacimiento: string | null;
+    logo?: string;
+    extensionImg?: string;
+    equipoJugador: Array<{
+        equipoJugadorId: number;
+        ramaId: number;
+        categoriaId: number;
+        posicionTipoTorneoId: number;
+        num: number;
+    }>;
+} | null>(null);
+const showDeleteModal = ref(false);
+const playerToDelete = ref<{ jugadorId: number; name: string } | null>(null);
 
 const teams = computed<Team[]>(() => {
     const palette = [
@@ -320,6 +436,8 @@ const mapJugadorToPlayer = (jugador: Jugador): Player => {
         age: calculateAge(jugador.fechaNacimiento),
         curp: jugador.curp,
         fechaNacimiento: jugador.fechaNacimiento,
+        logo: jugador.logo,
+        extensionImg: jugador.extensionImg,
         equipoJugador: enrichedAsignaciones,
     };
 };
@@ -387,11 +505,87 @@ const handlePlayerCreated = async (payload: JugadorRequest) => {
     }
 };
 
-const handleDeletePlayer = async (playerId: string) => {
+const handleDeletePlayer = (playerId: string) => {
     const jugadorId = Number(playerId);
     if (!jugadorId) return;
-    await deleteJugador(jugadorId);
-    await loadPlayers();
+    
+    // Buscar el jugador para mostrar su nombre en la confirmación
+    const player = players.value.find(p => p.jugadorId === jugadorId);
+    if (!player) return;
+    
+    // Guardar el jugador a eliminar y mostrar el modal
+    playerToDelete.value = {
+        jugadorId: player.jugadorId,
+        name: player.name
+    };
+    showDeleteModal.value = true;
+};
+
+const confirmDelete = async () => {
+    if (!playerToDelete.value) return;
+    
+    const jugadorId = playerToDelete.value.jugadorId;
+    
+    try {
+        await deleteJugador(jugadorId);
+        await loadPlayers();
+        showDeleteModal.value = false;
+        playerToDelete.value = null;
+    } catch (error) {
+        // El error ya se maneja en el servicio
+    }
+};
+
+const handleEditPlayer = (player: Player) => {
+    // Buscar el jugador completo en rawPlayers para obtener todos los datos
+    const jugador = rawPlayers.value.find(
+        (item) => item.jugadorId === player.jugadorId
+    );
+    
+    if (!jugador) return;
+    
+    // Preparar los datos para edición
+    editingPlayer.value = {
+        jugadorId: jugador.jugadorId,
+        nombre: jugador.nombre,
+        apellidoPaterno: jugador.apellidoPaterno,
+        apellidoMaterno: jugador.apellidoMaterno,
+        curp: jugador.curp,
+        fechaNacimiento: jugador.fechaNacimiento,
+        logo: jugador.logo,
+        extensionImg: jugador.extensionImg,
+        equipoJugador: jugador.equipoJugador.map((eq) => ({
+            equipoJugadorId: eq.equipoJugadorId,
+            ramaId: eq.ramaId,
+            categoriaId: eq.categoriaId,
+            posicionTipoTorneoId: eq.posicionTipoTorneoId,
+            num: eq.num,
+        })),
+    };
+    
+    showEditModal.value = true;
+};
+
+const closeEditModal = () => {
+    showEditModal.value = false;
+    editingPlayer.value = null;
+};
+
+const handlePlayerUpdated = async (payload: JugadorRequest) => {
+    if (!editingPlayer.value) return;
+    
+    savingPlayer.value = true;
+    try {
+        await updateJugador(editingPlayer.value.jugadorId, payload);
+        // Recargar la lista de jugadores para mostrar los cambios
+        await loadPlayers();
+        // Cerrar el modal de edición
+        closeEditModal();
+        // Cambiar a la pestaña de lista para que el usuario vea los cambios
+        activeTab.value = "list";
+    } finally {
+        savingPlayer.value = false;
+    }
 };
 
 const handleAssignPlayer = async (

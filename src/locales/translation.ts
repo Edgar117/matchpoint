@@ -42,6 +42,17 @@ export const message = {
                 Hide: "Hide",
             },
         },
+        navigationDrawer: {
+            modules: "MODULOS",
+            searchModule: "Buscar módulo",
+            Home: "Home",
+            Categoria: "Category",
+            Empresa: "Company",
+            Equipo: "Team",
+            Torneo: "Tournament",
+            Rama: "Rama",
+            Catalogos: "Catalogs",
+        },
     },
     es: {
         generales: {
@@ -86,6 +97,17 @@ export const message = {
                 Show: "Previsualizar",
                 Hide: "Ocultar",
             },
+        },
+        navigationDrawer: {
+            modules: "MODULOS",
+            searchModule: "Buscar módulo",
+            Home: "Inicio",
+            Categoria: "Categoría",
+            Empresa: "Empresa",
+            Equipo: "Equipo",
+            Torneo: "Torneo",
+            Rama: "Rama",
+            Catalogos: "Catálogos",
         },
     },
 };

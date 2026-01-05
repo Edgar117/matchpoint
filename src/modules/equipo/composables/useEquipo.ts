@@ -139,6 +139,7 @@ export const useEquipo = () => {
         return {
             equipoId: 0,
             colonia: "",
+            empresaId: 0,
             entrenador: fieldsFilter.value.entrenador,
             estado: "",
             logo: "",
