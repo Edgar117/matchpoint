@@ -5,11 +5,11 @@ export interface RolJuego {
     torneo?: string;
     ramaId: number;
     rama?: string;
-    categoriaId: number;
+    categoriaId: number | null;
     categoria?: string;
     tipoDeporteId?: number;
     tipoDeporte?: string;
-    tipoRolJuegoId: number;
+    tipoRolJuegoId: number | null;
     tipoRolJuego?: string;
     clave: string;
     descripcion: string;

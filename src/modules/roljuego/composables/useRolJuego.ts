@@ -15,6 +15,7 @@ const {
     selectTipoRolJuego,
     selectTorneosForDropdown,
     selectCategoriasForDropdown,
+    selectCategoriasByTorneo,
 } = useRolJuegoService();
 
 export const useRolJuego = () => {
@@ -84,10 +85,10 @@ export const useRolJuego = () => {
     const resetFields = () => {
         fields.value = {
             rolJuegoId: 0,
-            torneoId: 0,
+            torneoId: null as any,
             ramaId: 0,
-            categoriaId: 0,
-            tipoRolJuegoId: 0,
+            categoriaId: null,
+            tipoRolJuegoId: null,
             clave: "",
             descripcion: "",
             numRondas: 0,
@@ -110,8 +111,8 @@ export const useRolJuego = () => {
             rolJuegoId: fieldsFilter.value.rolJuegoId,
             torneoId: fieldsFilter.value.torneoId,
             ramaId: fieldsFilter.value.ramaId,
-            categoriaId: fieldsFilter.value.categoriaId,
-            tipoRolJuegoId: fieldsFilter.value.tipoRolJuegoId,
+            categoriaId: fieldsFilter.value.categoriaId ?? undefined,
+            tipoRolJuegoId: fieldsFilter.value.tipoRolJuegoId ?? undefined,
             clave: fieldsFilter.value.clave,
             descripcion: fieldsFilter.value.descripcion,
             numRondas: fieldsFilter.value.numRondas,
@@ -152,6 +153,11 @@ export const useRolJuego = () => {
                 sortable: !showFilter.value,
             },
             {
+                title: "Descripción",
+                key: "descripcion",
+                sortable: !showFilter.value,
+            },
+            {
                 title: "Clave",
                 key: "clave",
                 sortable: !showFilter.value,
@@ -171,11 +177,7 @@ export const useRolJuego = () => {
                 key: "tipoRolJuego",
                 sortable: !showFilter.value,
             },
-            {
-                title: "Descripción",
-                key: "descripcion",
-                sortable: !showFilter.value,
-            },
+           
             {
                 title: "Núm. Rondas",
                 key: "numRondas",
@@ -247,5 +249,6 @@ export const useRolJuego = () => {
         selectTipoRolJuego,
         selectTorneosForDropdown,
         selectCategoriasForDropdown,
+        selectCategoriasByTorneo,
     };
 };

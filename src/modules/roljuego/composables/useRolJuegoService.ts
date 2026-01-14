@@ -4,7 +4,7 @@ import { useRolJuegoStore } from "../store/state";
 import { URLS } from "@/helpers/constants";
 import { buildParams } from "@/modules/login/helpers/axiosHelper";
 import { useTemplateUI } from "@/store/templateUI";
-import { RolJuego, RolJuegonRequestParams, TipoRolJuego } from "@/interfaces/RolJuego";
+import { RolJuego, RolJuegonRequestParams } from "@/interfaces/RolJuego";
 import { Torneo } from "@/interfaces/Torneo";
 import { Categoria } from "@/interfaces/Categoria";
 
@@ -140,11 +140,29 @@ export const useRolJuegoService = () => {
      */
     const selectTipoRolJuego = async () => {
         try {
-            const { data } = await axios.get<{
-                data: TipoRolJuego[];
-                totalCount: number;
-            }>(`${URLS.COTBUILDER}/api/TipoRolJuego`);
-            return data.data;
+            const response = await axios.get<any>(
+                `${URLS.COTBUILDER}/api/TipoRolJuego`
+            );
+            
+            // El API devuelve un array directo, no un objeto con data y totalCount
+            let responseData = response.data;
+            
+            // Si viene como objeto con data, extraer el array
+            if (responseData && typeof responseData === 'object' && !Array.isArray(responseData)) {
+                responseData = responseData.data || [];
+            }
+            
+            // Asegurar que sea un array
+            const dataArray = Array.isArray(responseData) ? responseData : [];
+            
+            // Normalizar los datos para manejar el typo en la respuesta del API (tipoRolJuegold en lugar de tipoRolJuegoId)
+            const normalized = dataArray.map((item: any) => ({
+                tipoRolJuegoId: item.tipoRolJuegoId ?? item.tipoRolJuegold ?? item.TipoRolJuegoId ?? item.TipoRolJuegold ?? 0,
+                tipoRolJuego1: item.tipoRolJuego1 ?? item.TipoRolJuego1 ?? "",
+                regBorrado: item.regBorrado ?? item.RegBorrado ?? 0,
+            }));
+            
+            return normalized;
         } catch (error) {
             handleShowSnackbar({
                 text: `Something went wrong, contact the system administrator`,
@@ -201,6 +219,33 @@ export const useRolJuegoService = () => {
         }
     };
 
+    /**
+     * Retrieves categorias for a specific torneo.
+     * For now, returns all categorias since filtering by torneoId is not directly supported.
+     * @param torneoId - The ID of the torneo.
+     * @returns Array of Categorias.
+     */
+    const selectCategoriasByTorneo = async (torneoId: number | null) => {
+        if (!torneoId) return [];
+        try {
+            // Return all categorias - filtering can be done client-side if needed
+            const { data } = await axios.get<{
+                data: Categoria[];
+                totalCount: number;
+            }>(
+                `${URLS.COTBUILDER}/api/Categoria?SortColumn=categoriaId&Offset=0&Next_Rows=100&SortDirection=ASC`
+            );
+            return data.data;
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Something went wrong, contact the system administrator`,
+                type: "error",
+                valueModel: true,
+            });
+            return [];
+        }
+    };
+
     return {
         createRolJuego,
         selectRolJuego,
@@ -209,5 +254,6 @@ export const useRolJuegoService = () => {
         selectTipoRolJuego,
         selectTorneosForDropdown,
         selectCategoriasForDropdown,
+        selectCategoriasByTorneo,
     };
 };
