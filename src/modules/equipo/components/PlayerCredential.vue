@@ -239,7 +239,7 @@
                                 </div>
                             </div>
 
-                            <!-- SUPER STAR! Badge on the right -->
+                            <!-- MatchPoint Logo on the right -->
                             <div
                                 style="
                                     position: absolute;
@@ -253,42 +253,28 @@
                                     style="
                                         width: 80px;
                                         height: 80px;
-                                        background: #3b82f6;
-                                        clip-path: polygon(
-                                            50% 0%,
-                                            61% 35%,
-                                            98% 35%,
-                                            68% 57%,
-                                            79% 91%,
-                                            50% 70%,
-                                            21% 91%,
-                                            32% 57%,
-                                            2% 35%,
-                                            39% 35%
-                                        );
+                                        border-radius: 50%;
+                                        background: #ffffff;
+                                        border: 3px solid #1e3a8a;
                                         display: flex;
-                                        flex-direction: column;
                                         align-items: center;
                                         justify-content: center;
-                                        padding: 8px;
-                                        box-shadow: 0 4px 12px
-                                            rgba(0, 0, 0, 0.3);
+                                        padding: 0;
+                                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                                        overflow: hidden;
                                     "
                                 >
-                                    <div
+                                    <img
+                                        :src="matchpointLogo"
+                                        alt="MatchPoint"
                                         style="
-                                            color: #ffffff;
-                                            font-weight: 900;
-                                            font-size: 10px;
-                                            text-transform: uppercase;
-                                            text-align: center;
-                                            line-height: 1.1;
-                                            letter-spacing: 0.5px;
+                                            width: 100%;
+                                            height: 100%;
+                                            object-fit: cover;
+                                            border-radius: 50%;
+                                            display: block;
                                         "
-                                    >
-                                        <div>SUPER</div>
-                                        <div>STAR!</div>
-                                    </div>
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -498,6 +484,7 @@ import type { EquipoJugadorAsignacion } from "@/interfaces/Jugador";
 import { URLS } from "@/helpers/constants";
 import { useEquipoService } from "../composables/useEquipoService";
 import basketballIcon from "@/assets/c365f14205e2c1f9830d25c919f28561.svg";
+import matchpointLogo from "@/assets/Banner.png";
 // @ts-ignore - dom-to-image-more doesn't have types
 import domtoimage from "dom-to-image-more";
 

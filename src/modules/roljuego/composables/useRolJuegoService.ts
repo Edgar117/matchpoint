@@ -29,7 +29,7 @@ export const useRolJuegoService = () => {
 
             if (response.status === 200) {
                 handleShowSnackbar({
-                    text: `The record has been saved successfully`,
+                    text: `El registro se ha creado correctamente`,
                     type: "success",
                     valueModel: true,
                 });
@@ -56,7 +56,7 @@ export const useRolJuegoService = () => {
 
             if (response.status === 200) {
                 handleShowSnackbar({
-                    text: `The registry has been successfully edited`,
+                    text: `El registro ha sido editado exitosamente`,
                     type: "success",
                     valueModel: true,
                 });
@@ -82,7 +82,7 @@ export const useRolJuegoService = () => {
 
             if (response.status === 200) {
                 handleShowSnackbar({
-                    text: `Registration has been successfully deleted`,
+                    text: `El registro ha sido eliminado exitosamente`,
                     type: "success",
                     valueModel: true,
                 });

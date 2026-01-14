@@ -153,15 +153,16 @@ export const useRolJuego = () => {
                 sortable: !showFilter.value,
             },
             {
-                title: "Descripción",
-                key: "descripcion",
-                sortable: !showFilter.value,
-            },
-            {
                 title: "Clave",
                 key: "clave",
                 sortable: !showFilter.value,
             },
+            {
+                title: "Descripción",
+                key: "descripcion",
+                sortable: !showFilter.value,
+            },
+            
             {
                 title: "Rama",
                 key: "rama",
@@ -195,7 +196,7 @@ export const useRolJuego = () => {
     const dialogMessage = computed(() => {
         return {
             DELETE: {
-                title: "Este rol de juego sera removido",
+                title: "¿Este rol de juego sera removido?",
                 subtitle: "Y esta acción no puede ser deshecha",
                 textButton: "Aceptar",
                 onClick: () => handleDelete(),

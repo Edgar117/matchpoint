@@ -66,6 +66,19 @@
                         :sortBy="sortBy"
                     />
                 </template>
+                <template v-slot:[`item.direccion`]="{ item }">
+                    <a
+                        v-if="item.direccion && (item.direccion.startsWith('http://') || item.direccion.startsWith('https://') || item.direccion.startsWith('www.'))"
+                        :href="item.direccion.startsWith('www.') ? 'https://' + item.direccion : item.direccion"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-blue-600 hover:text-blue-800 underline cursor-pointer"
+                        @click.stop
+                    >
+                        {{ item.direccion }}
+                    </a>
+                    <span v-else>{{ item.direccion }}</span>
+                </template>
                 <template v-slot:[`item.action`]="{ item }">
                     <div class="flex gap-1">
                         <CGenerationAction
