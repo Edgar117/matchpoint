@@ -144,6 +144,7 @@
                             :equipo-id="props.equipoId"
                             :torneo-id="props.torneoId"
                             :tipo-deporte-id="tipoDeporteId"
+                            :equipo-nombre="props.equipoNombre"
                             @delete-player="handleDeletePlayer"
                             @edit-player="handleEditPlayer"
                             @refresh="loadPlayers"

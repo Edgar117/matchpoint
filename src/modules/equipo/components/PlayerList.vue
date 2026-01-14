@@ -86,6 +86,13 @@
                     <Trophy class="w-4 h-4" />
                   </button>
                   <button
+                    @click="openCredentialModal(player)"
+                    class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                    title="Ver credencial"
+                  >
+                    <CreditCard class="w-4 h-4" />
+                  </button>
+                  <button
                     @click="emit('deletePlayer', player.jugadorId.toString())"
                     class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Eliminar jugador"
@@ -253,15 +260,24 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Modal de Credencial del Jugador -->
+    <PlayerCredential
+      :player="selectedPlayerForCredential"
+      :tipo-deporte-id="props.tipoDeporteId"
+      :equipo-nombre="props.equipoNombre"
+      @close="closeCredentialModal"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { CheckCircle, Clock, Trash2, Users, Eye, Pencil, Trophy } from 'lucide-vue-next'
+import { CheckCircle, Clock, Trash2, Users, Eye, Pencil, Trophy, CreditCard } from 'lucide-vue-next'
 import type { EquipoJugadorAsignacion, RamaEquipo, CategoriaEquipo } from '@/interfaces/Jugador'
 import { URLS } from '@/helpers/constants'
 import PlayerTournamentAssignment from './PlayerTournamentAssignment.vue'
+import PlayerCredential from './PlayerCredential.vue'
 
 interface Player {
   id: string
@@ -283,6 +299,7 @@ const props = defineProps<{
   equipoId?: number
   torneoId?: number | null
   tipoDeporteId?: number | null
+  equipoNombre?: string
 }>()
 
 const emit = defineEmits<{
@@ -297,6 +314,7 @@ const imageErrors = ref<Record<number, boolean>>({})
 const showTournamentAssignmentModal = ref(false)
 const selectedPlayerForTournament = ref<Player | null>(null)
 const tournamentAssignmentRef = ref<InstanceType<typeof PlayerTournamentAssignment> | null>(null)
+const selectedPlayerForCredential = ref<Player | null>(null)
 
 const formatDate = (value: string) => {
   const date = new Date(value)
@@ -393,5 +411,13 @@ const handleTournamentSubmit = async () => {
 const handleTournamentAssigned = () => {
   closeTournamentAssignmentModal()
   emit('refresh')
+}
+
+const openCredentialModal = (player: Player) => {
+  selectedPlayerForCredential.value = player
+}
+
+const closeCredentialModal = () => {
+  selectedPlayerForCredential.value = null
 }
 </script>
