@@ -52,6 +52,9 @@ export const message = {
             Torneo: "Tournament",
             Rama: "Rama",
             Catalogos: "Catalogs",
+            Configuraciones: "Settings",
+            Cancha: "Court",
+            RoldeJuego: "Game Role",
         },
     },
     es: {
@@ -108,6 +111,9 @@ export const message = {
             Torneo: "Torneo",
             Rama: "Rama",
             Catalogos: "Catálogos",
+            Configuraciones: "Configuraciones",
+            Cancha: "Cancha",
+            RoldeJuego: "Rol de Juego",
         },
     },
 };
