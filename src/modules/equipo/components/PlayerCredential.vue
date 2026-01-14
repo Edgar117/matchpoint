@@ -1,6 +1,6 @@
 <template>
     <v-dialog v-model="showModal" max-width="700px" persistent>
-        <v-card style="border-radius: 12px;">
+        <v-card style="border-radius: 12px">
             <v-card-title
                 style="
                     background: linear-gradient(to right, #9333ea, #f97316);
@@ -8,27 +8,52 @@
                     padding: 16px 24px;
                 "
             >
-                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                    <h3 style="font-size: 20px; font-weight: bold; margin: 0;">Credencial del Jugador</h3>
+                <div
+                    style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        width: 100%;
+                    "
+                >
+                    <h3 style="font-size: 20px; font-weight: bold; margin: 0">
+                        Credencial del Jugador
+                    </h3>
                     <v-btn
                         icon
                         variant="text"
                         color="white"
                         @click="closeModal"
-                        style="background-color: rgba(255, 255, 255, 0.2);"
+                        style="background-color: rgba(255, 255, 255, 0.2)"
                     >
                         <v-icon>mdi-close</v-icon>
                     </v-btn>
                 </div>
             </v-card-title>
 
-            <v-card-text style="padding: 24px;">
-                <div v-if="loading" style="text-align: center; padding: 32px 0;">
-                    <p style="color: #475569; margin: 0;">Cargando credencial...</p>
+            <v-card-text style="padding: 24px">
+                <div v-if="loading" style="text-align: center; padding: 32px 0">
+                    <p style="color: #475569; margin: 0">
+                        Cargando credencial...
+                    </p>
                 </div>
 
-                <div v-else style="display: flex; flex-direction: column; align-items: center;">
-                    <p style="font-size: 14px; color: #475569; margin-bottom: 16px; margin-top: 0;">
+                <div
+                    v-else
+                    style="
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                    "
+                >
+                    <p
+                        style="
+                            font-size: 14px;
+                            color: #475569;
+                            margin-bottom: 16px;
+                            margin-top: 0;
+                        "
+                    >
                         La credencial se exportará en alta resolución
                     </p>
                     <!-- Canvas container for the credential -->
@@ -40,7 +65,7 @@
                             height: '680px',
                             position: 'relative',
                             overflow: 'hidden',
-                            borderRadius: '12px',
+                            borderRadius: '16px',
                             border: 'none',
                             boxShadow: 'none',
                             margin: '0',
@@ -48,7 +73,7 @@
                             outline: 'none',
                         }"
                     >
-                        <!-- Background gradient (purple top-left to blue/teal bottom-right) -->
+                        <!-- Deep blue background with diagonal stripe pattern -->
                         <div
                             style="
                                 position: absolute;
@@ -56,99 +81,134 @@
                                 left: 0;
                                 right: 0;
                                 bottom: 0;
-                                background: linear-gradient(
-                                    135deg,
-                                    #9333ea 0%,
-                                    #3b82f6 50%,
-                                    #14b8a6 100%
-                                );
+                                background: #1e3a8a;
                             "
-                        ></div>
+                        >
+                            <!-- Diagonal stripe pattern on edges -->
+                            <div
+                                style="
+                                    position: absolute;
+                                    top: 0;
+                                    left: 0;
+                                    width: 100%;
+                                    height: 100%;
+                                    background: repeating-linear-gradient(
+                                        45deg,
+                                        transparent,
+                                        transparent 10px,
+                                        rgba(59, 130, 246, 0.15) 10px,
+                                        rgba(59, 130, 246, 0.15) 20px
+                                    );
+                                    pointer-events: none;
+                                "
+                            ></div>
+                        </div>
 
-                        <!-- Top-left: Matchpoint Logo in white circular button with purple border -->
+                        <!-- Top Section: Player Name on White Background -->
                         <div
-                            style="position: absolute; top: 16px; left: 16px; z-index: 10;"
+                            style="
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                right: 0;
+                                background: #ffffff;
+                                padding: 20px 32px;
+                                z-index: 10;
+                                text-align: center;
+                                height: 100px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            "
                         >
                             <div
                                 style="
-                                    width: 80px;
-                                    height: 80px;
-                                    border-radius: 50%;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    background-color: #ffffff;
-                                    border: 2px solid #9333ea;
-                                    overflow: hidden;
+                                    font-weight: 900;
+                                    font-size: 36px;
+                                    color: #1e3a8a;
+                                    text-transform: uppercase;
+                                    letter-spacing: 3px;
+                                    font-family: 'Arial Black', 'Arial',
+                                        sans-serif;
+                                    line-height: 1.2;
+                                    margin: 0;
+                                    padding: 0;
                                 "
                             >
-                                <img
-                                    v-if="!logoError"
-                                    :src="matchpointLogo"
-                                    alt="Matchpoint"
-                                    style="width: 100%; height: 100%; object-fit: cover; border: none; outline: none; display: block;"
-                                    @error="handleLogoError"
-                                />
-                                <div
-                                    v-else
-                                    style="
-                                        width: 100%;
-                                        height: 100%;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        color: #9333ea;
-                                        font-weight: bold;
-                                        font-size: 12px;
-                                        text-transform: uppercase;
-                                    "
-                                >
-                                    MP
-                                </div>
+                                {{
+                                    playerName.toUpperCase() ||
+                                    "NOMBRE DEL JUGADOR"
+                                }}
                             </div>
                         </div>
 
-                        <!-- Top-right: Team name with orange globe icon -->
+                        <!-- Middle Section: White Background with Photo, Signature, and Badge -->
                         <div
-                            style="position: absolute; top: 16px; right: 16px; z-index: 10; display: flex; align-items: center; gap: 8px;"
+                            style="
+                                position: absolute;
+                                top: 100px;
+                                left: 0;
+                                right: 0;
+                                background: #ffffff;
+                                padding: 32px;
+                                height: 320px;
+                                z-index: 10;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            "
                         >
-                            <span
-                                style="color:white; font-weight: bold; font-size: 16px; text-transform: uppercase;"
-                            >
-                                {{ equipoNombre }}
-                            </span>
+                            <!-- Signature on the left -->
                             <div
-                                style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: #f97316; border: 2px solid #ffffff; overflow: hidden;"
+                                class="signature-text"
+                                style="
+                                    position: absolute;
+                                    left: 8px;
+                                    top: 50%;
+                                    transform: translateY(-50%);
+                                    writing-mode: vertical-rl;
+                                    text-orientation: mixed;
+                                    font-family: 'Brush Script MT',
+                                        'Lucida Handwriting', 'Arial', cursive;
+                                    font-size: 32px;
+                                    color: #000000;
+                                    font-weight: bold;
+                                    white-space: nowrap;
+                                    z-index: 15;
+                                    opacity: 0.9;
+                                    line-height: 1;
+                                    margin: 0;
+                                    padding: 0;
+                                "
                             >
-                                <!-- Basketball icon image -->
-                                <img
-                                    :src="basketballIcon"
-                                    alt="Basketball"
-                                    style="width: 28px; height: 28px; object-fit: contain; filter: brightness(0) invert(1);"
-                                />
+                                {{ playerFirstName }}
+                                {{
+                                    playerLastNames.split(" ")[0]?.charAt(0) ||
+                                    ""
+                                }}
                             </div>
-                        </div>
 
-                        <!-- Player photo (large white circle in center) -->
-                        <div
-                            style="position: absolute; top: 120px; left: 50%; transform: translateX(-50%); z-index: 10;"
-                        >
+                            <!-- Player Photo (rectangular, not circular) -->
                             <div
                                 style="
                                     width: 240px;
-                                    height: 240px;
-                                    border-radius: 50%;
+                                    height: 280px;
                                     overflow: hidden;
-                                    background-color: #ffffff;
-                                    border: 6px solid #ffffff;
-                                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                                    background-color: #f1f5f9;
+                                    position: relative;
+                                    filter: grayscale(30%) brightness(0.9)
+                                        sepia(10%);
                                 "
                             >
                                 <img
                                     v-if="playerImageUrl && !imageError"
                                     :src="playerImageUrl"
                                     :alt="playerName"
-                                    style="width: 100%; height: 100%; object-fit: cover;"
+                                    style="
+                                        width: 100%;
+                                        height: 100%;
+                                        object-fit: cover;
+                                    "
                                     @error="imageError = true"
                                     @load="onImageLoad"
                                 />
@@ -166,72 +226,253 @@
                                 >
                                     <svg
                                         viewBox="0 0 24 24"
-                                        style="width: 120px; height: 120px; fill: #cbd5e1;"
+                                        style="
+                                            width: 120px;
+                                            height: 120px;
+                                            fill: #cbd5e1;
+                                        "
                                     >
-                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                        <path
+                                            d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+                                        />
                                     </svg>
+                                </div>
+                            </div>
+
+                            <!-- SUPER STAR! Badge on the right -->
+                            <div
+                                style="
+                                    position: absolute;
+                                    right: 24px;
+                                    top: 50%;
+                                    transform: translateY(-50%);
+                                    z-index: 15;
+                                "
+                            >
+                                <div
+                                    style="
+                                        width: 80px;
+                                        height: 80px;
+                                        background: #3b82f6;
+                                        clip-path: polygon(
+                                            50% 0%,
+                                            61% 35%,
+                                            98% 35%,
+                                            68% 57%,
+                                            79% 91%,
+                                            50% 70%,
+                                            21% 91%,
+                                            32% 57%,
+                                            2% 35%,
+                                            39% 35%
+                                        );
+                                        display: flex;
+                                        flex-direction: column;
+                                        align-items: center;
+                                        justify-content: center;
+                                        padding: 8px;
+                                        box-shadow: 0 4px 12px
+                                            rgba(0, 0, 0, 0.3);
+                                    "
+                                >
+                                    <div
+                                        style="
+                                            color: #ffffff;
+                                            font-weight: 900;
+                                            font-size: 10px;
+                                            text-transform: uppercase;
+                                            text-align: center;
+                                            line-height: 1.1;
+                                            letter-spacing: 0.5px;
+                                        "
+                                    >
+                                        <div>SUPER</div>
+                                        <div>STAR!</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Bottom panel with player info (light blue with purple gradient) -->
+                        <!-- Bottom Section: Deep Blue Background with Stats and Info -->
                         <div
                             style="
                                 position: absolute;
-                                bottom: 0;
+                                top: 420px;
                                 left: 0;
                                 right: 0;
+                                bottom: 0;
+                                background: #1e3a8a;
+                                padding: 24px 32px;
                                 z-index: 10;
-                                background: linear-gradient(
-                                    to bottom right,
-                                    #e0f2fe 0%,
-                                    #bae6fd 30%,
-                                    #93c5fd 60%,
-                                    #9333ea 100%
-                                );
-                                border-top-left-radius: 32px;
-                                border-top-right-radius: 32px;
-                                padding: 32px 24px 24px 24px;
-                                min-height: 280px;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
                             "
                         >
-                            <div style="text-align: center; width: 100%;">
-                                <!-- Nombre del equipo (más llamativo y bold) -->
+                            <!-- Position and Number Row -->
+                            <div
+                                style="
+                                    position: relative;
+                                    width: 100%;
+                                    height: 40px;
+                                    margin-bottom: 16px;
+                                "
+                            >
                                 <div
-                                    style="font-weight: 900; font-size: 24px; margin-bottom: 16px; text-transform: uppercase; color: #0f172a; letter-spacing: 1px; font-family: 'Arial Black', 'Arial', sans-serif;"
+                                    class="position-text"
+                                    style="
+                                        position: absolute;
+                                        left: 0;
+                                        top: 0;
+                                        font-weight: 900;
+                                        font-size: 28px;
+                                        color: #ffffff;
+                                        text-transform: uppercase;
+                                        letter-spacing: 2px;
+                                        line-height: 40px;
+                                        margin: 0;
+                                        padding: 0;
+                                        height: 40px;
+                                        white-space: nowrap;
+                                    "
                                 >
-                                    {{ equipoNombre.toUpperCase() }}
+                                    {{ playerPosition || "POSICIÓN" }}
                                 </div>
-                                
-                                <!-- Nombre completo del jugador -->
                                 <div
-                                    style="font-size: 22px; margin-bottom: 16px; color: #0f172a; font-weight: 600; letter-spacing: 0.5px;"
+                                    class="number-text"
+                                    style="
+                                        position: absolute;
+                                        right: 0;
+                                        top: 0;
+                                        font-weight: 900;
+                                        font-size: 28px;
+                                        color: #ffffff;
+                                        text-transform: uppercase;
+                                        letter-spacing: 2px;
+                                        line-height: 40px;
+                                        margin: 0;
+                                        padding: 0;
+                                        height: 40px;
+                                        white-space: nowrap;
+                                    "
                                 >
-                                    {{ playerName || "Nombre del Jugador" }}
+                                    #{{
+                                        playerNumber
+                                            ? String(playerNumber).padStart(
+                                                  2,
+                                                  "0"
+                                              )
+                                            : "00"
+                                    }}
                                 </div>
-                                
-                                <!-- POSICIÓN (Position) -->
+                            </div>
+
+                            <!-- Horizontal Line -->
+                            <div
+                                style="
+                                    width: 100%;
+                                    height: 2px;
+                                    background: #ffffff;
+                                    margin-bottom: 16px;
+                                "
+                            ></div>
+
+                            <!-- Team and Federation Info Row -->
+                            <div
+                                style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: flex-end;
+                                "
+                            >
+                                <!-- Team Info (Left) -->
                                 <div
-                                    v-if="playerPosition"
-                                    style="font-weight: bold; font-size: 20px; text-transform: uppercase; color: #0f172a; letter-spacing: 1px; margin-top: 8px;"
+                                    style="
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 12px;
+                                    "
                                 >
-                                    {{ playerPosition }}
+                                    <div
+                                        style="
+                                            width: 40px;
+                                            height: 40px;
+                                            border-radius: 50%;
+                                            background: #ffffff;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            border: 2px solid #3b82f6;
+                                        "
+                                    >
+                                        <img
+                                            :src="basketballIcon"
+                                            alt="Basketball"
+                                            style="
+                                                width: 28px;
+                                                height: 28px;
+                                                object-fit: contain;
+                                            "
+                                        />
+                                    </div>
+                                    <div>
+                                        <div
+                                            style="
+                                                font-weight: 700;
+                                                font-size: 18px;
+                                                color: #ffffff;
+                                                margin-bottom: 4px;
+                                                white-space: nowrap;
+                                            "
+                                        >
+                                            {{ equipoNombre }}
+                                        </div>
+                                        <div
+                                            style="
+                                                font-weight: 400;
+                                                font-size: 14px;
+                                                color: rgba(255, 255, 255, 0.8);
+                                                text-transform: uppercase;
+                                                white-space: nowrap;
+                                            "
+                                        >
+                                            Basket Team
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Federation Info (Right) -->
+                                <div style="text-align: right">
+                                    <div
+                                        style="
+                                            font-weight: 700;
+                                            font-size: 18px;
+                                            color: #ffffff;
+                                            margin-bottom: 4px;
+                                        "
+                                    >
+                                        MatchPoint
+                                    </div>
+                                    <div
+                                        style="
+                                            font-weight: 400;
+                                            font-size: 14px;
+                                            color: rgba(255, 255, 255, 0.8);
+                                            white-space: nowrap;
+                                        "
+                                    >
+                                        https://uniquecore.dev/
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Export button -->
-                    <div style="margin-top: 24px; display: flex; gap: 12px;">
+                    <div style="margin-top: 24px; display: flex; gap: 12px">
                         <v-btn
                             color="purple"
                             variant="flat"
                             @click="exportToPNG"
                             :loading="exporting"
-                            style="padding-left: 24px; padding-right: 24px;"
+                            style="padding-left: 24px; padding-right: 24px"
                         >
                             <v-icon start>mdi-download</v-icon>
                             Exportar a PNG
@@ -240,7 +481,7 @@
                             variant="outlined"
                             color="grey"
                             @click="closeModal"
-                            style="padding-left: 24px; padding-right: 24px;"
+                            style="padding-left: 24px; padding-right: 24px"
                         >
                             Cerrar
                         </v-btn>
@@ -256,7 +497,6 @@ import { ref, computed, watch, nextTick } from "vue";
 import type { EquipoJugadorAsignacion } from "@/interfaces/Jugador";
 import { URLS } from "@/helpers/constants";
 import { useEquipoService } from "../composables/useEquipoService";
-import matchpointLogo from "@/assets/Banner.png";
 import basketballIcon from "@/assets/c365f14205e2c1f9830d25c919f28561.svg";
 // @ts-ignore - dom-to-image-more doesn't have types
 import domtoimage from "dom-to-image-more";
@@ -288,7 +528,6 @@ const exporting = ref(false);
 const credentialContainer = ref<HTMLElement | null>(null);
 const imageError = ref(false);
 const imageLoaded = ref(false);
-const logoError = ref(false);
 
 const equipoNombre = computed(() => props.equipoNombre || "EQUIPO");
 
@@ -352,6 +591,29 @@ const playerPosition = computed(() => {
     return posicion?.posicion || "";
 });
 
+const playerNumber = computed(() => {
+    if (
+        !props.player ||
+        !props.player.equipoJugador ||
+        props.player.equipoJugador.length === 0
+    ) {
+        return null;
+    }
+
+    const firstAssignment = props.player.equipoJugador[0];
+    return firstAssignment.num || null;
+});
+
+const playerStats = computed(() => {
+    // Placeholder stats - these would come from actual player statistics if available
+    // For now, using placeholder values that match the design
+    return {
+        points: 189,
+        assists: 78,
+        shots: 90,
+    };
+});
+
 const playerImageUrl = computed(() => {
     if (!props.player || !props.player.logo || !props.player.jugadorId)
         return "";
@@ -396,27 +658,40 @@ const closeModal = () => {
     emit("close");
 };
 
-const handleLogoError = () => {
-    logoError.value = true;
-};
-
 const onImageLoad = () => {
     imageLoaded.value = true;
 };
 
 const exportToPNG = async () => {
     if (!credentialContainer.value) return;
-    
+
     exporting.value = true;
     try {
         // Wait for images to load completely
         await nextTick();
-        
-        // Wait a bit more to ensure all images are loaded
+
+        // Wait for fonts to load
+        await document.fonts.ready;
+
+        // Wait a bit more to ensure all images are loaded and rendered
         if (imageLoaded.value || imageError.value) {
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 300));
+        } else {
+            await new Promise((resolve) => setTimeout(resolve, 500));
         }
+
+        // Force a reflow to ensure all styles are applied
+        credentialContainer.value.offsetHeight;
         
+        // Force render of position and number elements
+        const positionElements = credentialContainer.value.querySelectorAll('.position-text, .number-text');
+        positionElements.forEach((el) => {
+            (el as HTMLElement).offsetHeight;
+        });
+        
+        // Additional wait to ensure positioning is stable
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
         const dataUrl = await domtoimage.toPng(credentialContainer.value, {
             quality: 1.0,
             width: 1080,
@@ -425,10 +700,25 @@ const exportToPNG = async () => {
                 transform: "scale(2)",
                 transformOrigin: "top left",
             },
+            fontEmbedCSS: `
+                @import url('https://fonts.googleapis.com/css2?family=Arial:wght@400;700;900&display=swap');
+            `,
+            useCORS: true,
+            cacheBust: true,
+            filter: (node: Node) => {
+                // Ensure text nodes are properly rendered
+                if (node.nodeType === Node.TEXT_NODE) {
+                    return true;
+                }
+                return true;
+            },
         });
-        
+
         const link = document.createElement("a");
-        link.download = `credencial-${playerName.value.replace(/\s+/g, "-")}.png`;
+        link.download = `credencial-${playerName.value.replace(
+            /\s+/g,
+            "-"
+        )}.png`;
         link.href = dataUrl;
         link.click();
     } catch (error) {
@@ -437,7 +727,6 @@ const exportToPNG = async () => {
         exporting.value = false;
     }
 };
-
 </script>
 
 <style scoped>
@@ -448,10 +737,14 @@ const exportToPNG = async () => {
     box-shadow: none !important;
     margin: 0 !important;
     padding: 0 !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .credential-card * {
     box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* Ensure no borders appear in export */
@@ -470,16 +763,51 @@ const exportToPNG = async () => {
     max-width: 100%;
     height: auto;
 }
-div {
+
+/* Fix text positioning for export */
+.signature-text {
+    transform: translateY(-50%) !important;
+    will-change: transform;
+}
+
+/* Fix position and number text alignment for export */
+.position-text,
+.number-text {
+    position: absolute !important;
+    top: 0 !important;
+    line-height: 40px !important;
+    height: 40px !important;
+    transform: none !important;
+    will-change: auto;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    display: block !important;
+}
+
+.position-text {
+    left: 0 !important;
+}
+
+.number-text {
+    right: 0 !important;
+}
+
+/* Ensure stable text rendering */
+.credential-card div {
+    border: 0px solid transparent !important;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.credential-card span {
     border: 0px solid transparent !important;
 }
-div span {
+
+.credential-card div div {
     border: 0px solid transparent !important;
 }
-div div{
-    border: 0px solid transparent !important;
-}
-div div svg{
+
+.credential-card div div svg {
     border: 0px solid transparent !important;
 }
 </style>
