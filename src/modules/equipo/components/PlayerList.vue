@@ -266,6 +266,8 @@
       :player="selectedPlayerForCredential"
       :tipo-deporte-id="props.tipoDeporteId"
       :equipo-nombre="props.equipoNombre"
+      :equipo-id="props.equipoId"
+      :torneo-id="props.torneoId"
       @close="closeCredentialModal"
     />
   </div>

@@ -62,7 +62,7 @@
                         class="credential-card"
                         :style="{
                             width: '540px',
-                            height: '680px',
+                            height: '700px',
                             position: 'relative',
                             overflow: 'hidden',
                             borderRadius: '16px',
@@ -260,7 +260,8 @@
                                         align-items: center;
                                         justify-content: center;
                                         padding: 0;
-                                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                                        box-shadow: 0 4px 12px
+                                            rgba(0, 0, 0, 0.3);
                                         overflow: hidden;
                                     "
                                 >
@@ -356,6 +357,116 @@
                                     width: 100%;
                                     height: 2px;
                                     background: #ffffff;
+                                    margin-bottom: 16px;
+                                "
+                            ></div>
+
+                            <!-- Rama, Categoría and CURP Row -->
+                            <div
+                                style="
+                                    display: flex;
+                                    flex-direction: column;
+                                    gap: 12px;
+                                    margin-bottom: 16px;
+                                    white-space: nowrap;
+                                "
+                            >
+                                <div
+                                    style="
+                                        display: flex;
+                                        justify-content: space-between;
+                                        align-items: flex-start;
+                                    "
+                                >
+                                    <!-- Rama Section -->
+                                    <div
+                                        style="
+                                            display: flex;
+                                            flex-direction: column;
+                                            gap: 4px;
+                                        "
+                                    >
+                                        <div
+                                            style="
+                                                font-weight: 400;
+                                                font-size: 12px;
+                                                color: rgba(255, 255, 255, 0.7);
+                                                text-transform: uppercase;
+                                                letter-spacing: 0.5px;
+                                                white-space: nowrap;
+                                            "
+                                        >
+                                            Rama
+                                        </div>
+                                        <div
+                                            style="
+                                                font-weight: 900;
+                                                font-size: 20px;
+                                                color: #ffffff;
+                                                text-transform: uppercase;
+                                                letter-spacing: 1px;
+                                                line-height: 1.2;
+                                                white-space: nowrap;
+                                            "
+                                        >
+                                            {{ playerRama || "N/A" }}
+                                        </div>
+                                    </div>
+                                    <!-- Categoría Section -->
+                                    <div
+                                        style="
+                                            display: flex;
+                                            flex-direction: column;
+                                            gap: 4px;
+                                            text-align: right;
+                                        "
+                                    >
+                                        <div
+                                            style="
+                                                font-weight: 400;
+                                                font-size: 12px;
+                                                color: rgba(255, 255, 255, 0.7);
+                                                text-transform: uppercase;
+                                                letter-spacing: 0.5px;
+                                                white-space: nowrap;
+                                            "
+                                        >
+                                            Categoría
+                                        </div>
+                                        <div
+                                            style="
+                                                font-weight: 900;
+                                                font-size: 20px;
+                                                color: #ffffff;
+                                                text-transform: uppercase;
+                                                letter-spacing: 1px;
+                                                line-height: 1.2;
+                                                white-space: nowrap;
+                                            "
+                                        >
+                                            {{ playerCategoria || "N/A" }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    style="
+                                        font-weight: 500;
+                                        font-size: 12px;
+                                        color: #ffffff;
+                                        text-align: center;
+                                        letter-spacing: 1px;
+                                    "
+                                >
+                                    CURP: {{ playerCurp || "N/A" }}
+                                </div>
+                            </div>
+
+                            <!-- Separator Line -->
+                            <div
+                                style="
+                                    width: 100%;
+                                    height: 1px;
+                                    background: rgba(255, 255, 255, 0.3);
                                     margin-bottom: 16px;
                                 "
                             ></div>
@@ -504,6 +615,8 @@ const props = defineProps<{
     player: Player | null;
     tipoDeporteId?: number | null;
     equipoNombre?: string;
+    equipoId?: number;
+    torneoId?: number | null;
 }>();
 
 const emit = defineEmits<{
@@ -518,7 +631,8 @@ const imageLoaded = ref(false);
 
 const equipoNombre = computed(() => props.equipoNombre || "EQUIPO");
 
-const { selectPosicionesTipoTorneo } = useEquipoService();
+const { selectPosicionesTipoTorneo, selectCategoriasPorEquipo } =
+    useEquipoService();
 const posiciones = ref<
     Array<{
         posicionTipoTorneoId: number;
@@ -526,6 +640,14 @@ const posiciones = ref<
         tipoTorneo: string;
         posicion: string;
         descripcion: string;
+    }>
+>([]);
+const categorias = ref<
+    Array<{
+        categoriaId: number;
+        categoria: string;
+        descripcion?: string;
+        ramaId?: number;
     }>
 >([]);
 
@@ -591,6 +713,68 @@ const playerNumber = computed(() => {
     return firstAssignment.num || null;
 });
 
+// Función para mapear ramaId a texto
+const getRamaText = (ramaId?: number | null): string => {
+    if (!ramaId) return "";
+    switch (ramaId) {
+        case 1:
+            return "VARONIL";
+        case 2:
+            return "FEMENIL";
+        case 3:
+            return "MIXTO";
+        default:
+            return "";
+    }
+};
+
+// Función para obtener nombre de categoría (similar a PlayerList.vue)
+const getCategoriaNombre = (categoriaId?: number | null): string => {
+    if (!categoriaId || categoriaId === 0 || categorias.value.length === 0)
+        return "";
+    const categoria = categorias.value.find(
+        (c) => c.categoriaId === categoriaId
+    );
+    return categoria?.categoria ?? "";
+};
+
+const playerRama = computed(() => {
+    if (
+        !props.player ||
+        !props.player.equipoJugador ||
+        props.player.equipoJugador.length === 0
+    ) {
+        return "";
+    }
+
+    const firstAssignment = props.player.equipoJugador[0];
+    // Usar mapeo directo de ramaId a texto
+    return getRamaText(firstAssignment.ramaId);
+});
+
+const playerCategoria = computed(() => {
+    if (
+        !props.player ||
+        !props.player.equipoJugador ||
+        props.player.equipoJugador.length === 0
+    ) {
+        return "";
+    }
+
+    const firstAssignment = props.player.equipoJugador[0];
+    // Usar categoriaNombre de la asignación si está disponible,
+    // o buscar en el catálogo cargado (similar a PlayerList.vue)
+    return (
+        firstAssignment.categoriaNombre ||
+        getCategoriaNombre(firstAssignment.categoriaId)
+    );
+});
+
+const playerCurp = computed(() => {
+    if (!props.player) return "";
+    return props.player.curp || "";
+});
+
 const playerStats = computed(() => {
     // Placeholder stats - these would come from actual player statistics if available
     // For now, using placeholder values that match the design
@@ -614,7 +798,7 @@ const playerImageUrl = computed(() => {
     return `${URLS.COTBUILDER}/api/Jugador/logo/${props.player.jugadorId}/${nombreLogo}`;
 });
 
-// Watch for modal opening and load positions
+// Watch for modal opening and load positions and categories
 watch(
     () => props.player,
     async (newPlayer) => {
@@ -630,6 +814,24 @@ watch(
                     );
                 } catch (error) {
                     console.error("Error loading positions:", error);
+                }
+            }
+
+            // Load categories if needed (similar to PlayerList.vue pattern)
+            // Check if categoriaNombre is missing from assignments and we have equipoId/torneoId
+            const needsCategories = 
+                props.equipoId && 
+                categorias.value.length === 0 &&
+                (!newPlayer.equipoJugador?.[0]?.categoriaNombre);
+            
+            if (needsCategories) {
+                try {
+                    categorias.value = await selectCategoriasPorEquipo(
+                        props.torneoId ?? null,
+                        props.equipoId
+                    );
+                } catch (error) {
+                    console.error("Error loading categories:", error);
                 }
             }
 
@@ -669,20 +871,22 @@ const exportToPNG = async () => {
 
         // Force a reflow to ensure all styles are applied
         credentialContainer.value.offsetHeight;
-        
+
         // Force render of position and number elements
-        const positionElements = credentialContainer.value.querySelectorAll('.position-text, .number-text');
+        const positionElements = credentialContainer.value.querySelectorAll(
+            ".position-text, .number-text"
+        );
         positionElements.forEach((el) => {
             (el as HTMLElement).offsetHeight;
         });
-        
+
         // Additional wait to ensure positioning is stable
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         const dataUrl = await domtoimage.toPng(credentialContainer.value, {
             quality: 1.0,
             width: 1080,
-            height: 1360,
+            height: 1400,
             style: {
                 transform: "scale(2)",
                 transformOrigin: "top left",
