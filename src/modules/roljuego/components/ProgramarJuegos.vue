@@ -80,27 +80,15 @@
                                         Jornada {{ index + 1 }} - Ronda
                                         {{ jornada.ronda }}
                                     </h4>
-                                    <div class="d-flex gap-2 align-center">
-                                        <v-text-field
-                                            v-model="jornada.fecha"
-                                            type="date"
-                                            label="Fecha"
-                                            density="compact"
-                                            variant="outlined"
-                                            style="max-width: 200px"
-                                            @update:model-value="actualizarHorariosOcupados(jornada.fecha)"
-                                        ></v-text-field>
-                                        <v-btn
-                                            color="primary"
-                                            variant="outlined"
-                                            size="small"
-                                            :disabled="!jornada.fecha"
-                                            @click="verHorariosAsignados(jornada.fecha)"
-                                        >
-                                            <v-icon left>mdi-clock-outline</v-icon>
-                                            Ver horarios
-                                        </v-btn>
-                                    </div>
+                                    <v-text-field
+                                        v-model="jornada.fecha"
+                                        type="date"
+                                        label="Fecha"
+                                        density="compact"
+                                        variant="outlined"
+                                        style="max-width: 200px"
+                                        @update:model-value="actualizarHorariosOcupados(jornada.fecha)"
+                                    ></v-text-field>
                                 </div>
 
                                 <v-table>
@@ -110,7 +98,6 @@
                                             <th>Equipo 1</th>
                                             <th>Equipo 2</th>
                                             <th>Cancha</th>
-                                            <th>Ubicación</th>
                                             <th>Acciones</th>
                                         </tr>
                                     </thead>
@@ -176,15 +163,6 @@
                                                 ></v-select>
                                             </td>
                                             <td>
-                                                <v-text-field
-                                                    v-model="partido.ubicacion"
-                                                    density="compact"
-                                                    variant="outlined"
-                                                    placeholder="Ubicación"
-                                                    style="max-width: 200px"
-                                                ></v-text-field>
-                                            </td>
-                                            <td>
                                                 <v-btn
                                                     icon
                                                     size="small"
@@ -200,8 +178,8 @@
                                                 </v-btn>
                                             </td>
                                         </tr>
-                                        <tr>
-                                            <td colspan="6" class="text-center">
+                                    <tr>
+                                        <td colspan="5" class="text-center">
                                                 <v-btn
                                                     color="primary"
                                                     variant="outlined"
@@ -260,25 +238,22 @@
                                         :key="partido.partidoId"
                                         class="pa-2"
                                     >
-                                        <v-list-item-title class="text-body-2">
-                                            {{ partido.hora }} - {{ partido.equipo1 }} vs {{ partido.equipo2 }}
+                                        <v-list-item-title class="text-body-2 d-flex align-center gap-2">
+                                            <span>{{ formatearFechaCorta((partido as any).fecha || fechaSeleccionada) }} {{ partido.hora }} - {{ partido.equipo1 }} vs {{ partido.equipo2 }}</span>
+                                            <v-spacer></v-spacer>
+                                            <v-chip
+                                                :color="
+                                                    partido.estado === 'PROGRAMADO'
+                                                        ? 'primary'
+                                                        : partido.estado === 'FINALIZADO'
+                                                        ? 'success'
+                                                        : 'warning'
+                                                "
+                                                size="x-small"
+                                            >
+                                                {{ partido.estado }}
+                                            </v-chip>
                                         </v-list-item-title>
-                                        <v-list-item-subtitle class="text-caption">
-                                            {{ partido.cancha }} - {{ partido.ubicacion }}
-                                        </v-list-item-subtitle>
-                                        <v-chip
-                                            :color="
-                                                partido.estado === 'PROGRAMADO'
-                                                    ? 'primary'
-                                                    : partido.estado === 'FINALIZADO'
-                                                    ? 'success'
-                                                    : 'warning'
-                                            "
-                                            size="x-small"
-                                            class="mt-1"
-                                        >
-                                            {{ partido.estado }}
-                                        </v-chip>
                                     </v-list-item>
                                 </v-list>
                             </v-card-text>
@@ -289,79 +264,6 @@
         </v-card-text>
     </v-card>
 
-    <!-- Dialog para ver horarios asignados -->
-    <v-dialog v-model="showHorariosDialog" max-width="800px">
-        <v-card>
-            <v-card-title class="d-flex justify-space-between align-center">
-                <span>Horarios y Canchas Ocupadas</span>
-                <v-btn icon variant="text" @click="showHorariosDialog = false">
-                    <v-icon>mdi-close</v-icon>
-                </v-btn>
-            </v-card-title>
-            <v-card-text>
-                <div v-if="loadingHorarios" class="text-center py-8">
-                    <v-progress-circular
-                        indeterminate
-                        color="primary"
-                    ></v-progress-circular>
-                    <p class="mt-4">Cargando horarios...</p>
-                </div>
-                <div v-else>
-                    <v-alert
-                        v-if="horariosOcupados.length === 0"
-                        type="info"
-                        class="mb-4"
-                    >
-                        No hay horarios asignados para esta fecha.
-                    </v-alert>
-                    <v-table v-else>
-                        <thead>
-                            <tr>
-                                <th>Hora</th>
-                                <th>Equipo 1</th>
-                                <th>Equipo 2</th>
-                                <th>Cancha</th>
-                                <th>Ubicación</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="partido in horariosOcupados"
-                                :key="partido.partidoId"
-                            >
-                                <td>{{ partido.hora }}</td>
-                                <td>{{ partido.equipo1 || "N/A" }}</td>
-                                <td>{{ partido.equipo2 || "N/A" }}</td>
-                                <td>{{ partido.cancha || "N/A" }}</td>
-                                <td>{{ partido.ubicacion || "N/A" }}</td>
-                                <td>
-                                    <v-chip
-                                        :color="
-                                            partido.estado === 'PROGRAMADO'
-                                                ? 'primary'
-                                                : partido.estado === 'FINALIZADO'
-                                                ? 'success'
-                                                : 'warning'
-                                        "
-                                        size="small"
-                                    >
-                                        {{ partido.estado }}
-                                    </v-chip>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </v-table>
-                </div>
-            </v-card-text>
-            <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="primary" @click="showHorariosDialog = false">
-                    Cerrar
-                </v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
 </template>
 
 <script setup lang="ts">
@@ -395,10 +297,211 @@ const guardando = ref(false);
 const equipos = ref<Equipo[]>([]);
 const canchas = ref<Cancha[]>([]);
 const jornadas = ref<any[]>([]);
-const showHorariosDialog = ref(false);
 const loadingHorarios = ref(false);
 const horariosOcupados = ref<Partido[]>([]);
 const fechaSeleccionada = ref<string>("");
+
+// Horarios ficticios para maquetación - distribuidos en diferentes fechas
+const horariosFicticios: Partido[] = [
+    // Cancha 1: La cancha de la Ermita - Fecha 1 (15/01/2026)
+    {
+        partidoId: 1,
+        jornadaId: 1,
+        equipo1Id: 1,
+        equipo1: "Sooners",
+        equipo2Id: 2,
+        equipo2: "Lakers",
+        hora: "08:00",
+        canchaId: 1,
+        cancha: "La cancha de la Ermita",
+        ubicacion: "Cordemex",
+        estado: "PROGRAMADO",
+        marcador1: 0,
+        marcador2: 0,
+        fecha: "2026-01-15",
+    } as any,
+    {
+        partidoId: 2,
+        jornadaId: 1,
+        equipo1Id: 3,
+        equipo1: "Veteranos",
+        equipo2Id: 4,
+        equipo2: "Maverics",
+        hora: "10:00",
+        canchaId: 1,
+        cancha: "La cancha de la Ermita",
+        ubicacion: "Cordemex",
+        estado: "PROGRAMADO",
+        marcador1: 0,
+        marcador2: 0,
+        fecha: "2026-01-15",
+    } as any,
+    // Cancha 1: La cancha de la Ermita - Fecha 2 (22/01/2026) - misma cancha, diferente fecha
+    {
+        partidoId: 3,
+        jornadaId: 2,
+        equipo1Id: 1,
+        equipo1: "Sooners",
+        equipo2Id: 3,
+        equipo2: "Veteranos",
+        hora: "12:00",
+        canchaId: 1,
+        cancha: "La cancha de la Ermita",
+        ubicacion: "Cordemex",
+        estado: "PROGRAMADO",
+        marcador1: 0,
+        marcador2: 0,
+        fecha: "2026-01-22",
+    } as any,
+    {
+        partidoId: 4,
+        jornadaId: 2,
+        equipo1Id: 2,
+        equipo1: "Lakers",
+        equipo2Id: 4,
+        equipo2: "Maverics",
+        hora: "14:00",
+        canchaId: 1,
+        cancha: "La cancha de la Ermita",
+        ubicacion: "Cordemex",
+        estado: "PROGRAMADO",
+        marcador1: 0,
+        marcador2: 0,
+        fecha: "2026-01-22",
+    } as any,
+    // Cancha 2: La cancha de la mercedes barrera - Fecha 1
+    {
+        partidoId: 5,
+        jornadaId: 1,
+        equipo1Id: 1,
+        equipo1: "Sooners",
+        equipo2Id: 4,
+        equipo2: "Maverics",
+        hora: "09:00",
+        canchaId: 2,
+        cancha: "La cancha de la mercedes barrera",
+        ubicacion: "Cordemex",
+        estado: "PROGRAMADO",
+        marcador1: 0,
+        marcador2: 0,
+        fecha: "2026-01-15",
+    } as any,
+    {
+        partidoId: 6,
+        jornadaId: 1,
+        equipo1Id: 2,
+        equipo1: "Lakers",
+        equipo2Id: 3,
+        equipo2: "Veteranos",
+        hora: "11:00",
+        canchaId: 2,
+        cancha: "La cancha de la mercedes barrera",
+        ubicacion: "Cordemex",
+        estado: "PROGRAMADO",
+        marcador1: 0,
+        marcador2: 0,
+        fecha: "2026-01-15",
+    } as any,
+    // Cancha 2: La cancha de la mercedes barrera - Fecha 2
+    {
+        partidoId: 7,
+        jornadaId: 2,
+        equipo1Id: 1,
+        equipo1: "Sooners",
+        equipo2Id: 2,
+        equipo2: "Lakers",
+        hora: "13:00",
+        canchaId: 2,
+        cancha: "La cancha de la mercedes barrera",
+        ubicacion: "Cordemex",
+        estado: "PROGRAMADO",
+        marcador1: 0,
+        marcador2: 0,
+        fecha: "2026-01-22",
+    } as any,
+    {
+        partidoId: 8,
+        jornadaId: 2,
+        equipo1Id: 3,
+        equipo1: "Veteranos",
+        equipo2Id: 4,
+        equipo2: "Maverics",
+        hora: "15:00",
+        canchaId: 2,
+        cancha: "La cancha de la mercedes barrera",
+        ubicacion: "Cordemex",
+        estado: "PROGRAMADO",
+        marcador1: 0,
+        marcador2: 0,
+        fecha: "2026-01-22",
+    } as any,
+    // Cancha 3: Cancha Deportiva Central - Fecha 1
+    {
+        partidoId: 9,
+        jornadaId: 1,
+        equipo1Id: 2,
+        equipo1: "Lakers",
+        equipo2Id: 4,
+        equipo2: "Maverics",
+        hora: "08:30",
+        canchaId: 3,
+        cancha: "Cancha Deportiva Central",
+        ubicacion: "Cordemex",
+        estado: "PROGRAMADO",
+        marcador1: 0,
+        marcador2: 0,
+        fecha: "2026-01-15",
+    } as any,
+    {
+        partidoId: 10,
+        jornadaId: 1,
+        equipo1Id: 1,
+        equipo1: "Sooners",
+        equipo2Id: 3,
+        equipo2: "Veteranos",
+        hora: "10:30",
+        canchaId: 3,
+        cancha: "Cancha Deportiva Central",
+        ubicacion: "Cordemex",
+        estado: "PROGRAMADO",
+        marcador1: 0,
+        marcador2: 0,
+        fecha: "2026-01-15",
+    } as any,
+    // Cancha 3: Cancha Deportiva Central - Fecha 2
+    {
+        partidoId: 11,
+        jornadaId: 2,
+        equipo1Id: 1,
+        equipo1: "Sooners",
+        equipo2Id: 4,
+        equipo2: "Maverics",
+        hora: "12:30",
+        canchaId: 3,
+        cancha: "Cancha Deportiva Central",
+        ubicacion: "Cordemex",
+        estado: "PROGRAMADO",
+        marcador1: 0,
+        marcador2: 0,
+        fecha: "2026-01-22",
+    } as any,
+    {
+        partidoId: 12,
+        jornadaId: 2,
+        equipo1Id: 2,
+        equipo1: "Lakers",
+        equipo2Id: 3,
+        equipo2: "Veteranos",
+        hora: "14:30",
+        canchaId: 3,
+        cancha: "Cancha Deportiva Central",
+        ubicacion: "Cordemex",
+        estado: "PROGRAMADO",
+        marcador1: 0,
+        marcador2: 0,
+        fecha: "2026-01-22",
+    } as any,
+];
 
 // Equipos ficticios para pruebas
 const equiposFicticios: Equipo[] = [
@@ -488,15 +591,22 @@ const equiposFicticios: Equipo[] = [
 const canchasFicticias: Cancha[] = [
     {
         canchaId: 1,
-        cancha: "Cancha 1",
+        cancha: "La cancha de la Ermita",
         descripcion: "Cancha principal",
         ubicacion: "Cordemex",
         direccion: "Cordemex, Mérida, Yucatán",
     },
     {
         canchaId: 2,
-        cancha: "Cancha 2",
+        cancha: "La cancha de la mercedes barrera",
         descripcion: "Cancha secundaria",
+        ubicacion: "Cordemex",
+        direccion: "Cordemex, Mérida, Yucatán",
+    },
+    {
+        canchaId: 3,
+        cancha: "Cancha Deportiva Central",
+        descripcion: "Cancha central",
         ubicacion: "Cordemex",
         direccion: "Cordemex, Mérida, Yucatán",
     },
@@ -558,7 +668,7 @@ const puedeGuardar = computed(() => {
     return true;
 });
 
-// Agrupar horarios por cancha y categoría
+// Agrupar horarios por cancha
 const horariosAgrupados = computed(() => {
     const grupos: Record<string, Partido[]> = {};
     
@@ -572,6 +682,21 @@ const horariosAgrupados = computed(() => {
 
     return grupos;
 });
+
+// Formatear fecha corta para mostrar en los horarios
+const formatearFechaCorta = (fecha: string) => {
+    if (!fecha || fecha === "Sin fecha") return "";
+    try {
+        const date = new Date(fecha);
+        return date.toLocaleDateString("es-ES", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+        });
+    } catch {
+        return fecha;
+    }
+};
 
 // Función para actualizar nombres de equipos basándose en los IDs
 const actualizarNombresEquipos = () => {
@@ -606,7 +731,6 @@ const agregarPartido = (jornada: any) => {
         equipo2: "",
         hora: "08:00",
         canchaId: null,
-        ubicacion: "",
     });
     actualizarNombresEquipos();
 };
@@ -634,7 +758,8 @@ const generarJornadasVacias = (numRondas: number) => {
 // Actualizar horarios ocupados cuando cambia la fecha
 const actualizarHorariosOcupados = async (fecha: string) => {
     if (!fecha || !props.rolJuego) {
-        horariosOcupados.value = [];
+        // Para maquetación, mostrar todos los horarios ficticios
+        horariosOcupados.value = horariosFicticios;
         return;
     }
 
@@ -646,39 +771,26 @@ const actualizarHorariosOcupados = async (fecha: string) => {
             fecha,
             props.rolJuego.rolJuegoId
         );
-        horariosOcupados.value = partidos;
+        // Si no hay partidos reales, filtrar ficticios por fecha para maquetación
+        if (partidos.length > 0) {
+            horariosOcupados.value = partidos;
+        } else {
+            // Filtrar horarios ficticios por la fecha seleccionada
+            horariosOcupados.value = horariosFicticios.filter(
+                (p) => (p as any).fecha === fecha
+            );
+        }
     } catch (error) {
-        console.warn("Error al cargar horarios", error);
-        horariosOcupados.value = [];
-    } finally {
-        loadingHorarios.value = false;
-    }
-};
-
-// Ver horarios asignados para una fecha
-const verHorariosAsignados = async (fecha: string) => {
-    if (!fecha || !props.rolJuego) return;
-
-    showHorariosDialog.value = true;
-    loadingHorarios.value = true;
-    horariosOcupados.value = [];
-
-    try {
-        const partidos = await getPartidosByFecha(
-            fecha,
-            props.rolJuego.rolJuegoId
+        console.warn("Error al cargar horarios, usando ficticios", error);
+        // Filtrar horarios ficticios por la fecha seleccionada
+        horariosOcupados.value = horariosFicticios.filter(
+            (p) => (p as any).fecha === fecha
         );
-        horariosOcupados.value = partidos;
-    } catch (error) {
-        handleShowSnackbar({
-            text: "Error al cargar horarios asignados",
-            type: "error",
-            valueModel: true,
-        });
     } finally {
         loadingHorarios.value = false;
     }
 };
+
 
 const cargarDatos = async () => {
     if (!props.rolJuego) return;
@@ -728,6 +840,8 @@ const cargarDatos = async () => {
             jornadas.value = generarJornadasVacias(
                 props.rolJuego.numRondas || 1
             );
+            // Cargar horarios ficticios para maquetación
+            horariosOcupados.value = horariosFicticios;
         }
     } catch (error) {
         console.warn("Error general, usando datos ficticios", error);
@@ -738,6 +852,8 @@ const cargarDatos = async () => {
             jornadas.value = generarJornadasVacias(
                 props.rolJuego?.numRondas || 1
             );
+            // Cargar horarios ficticios para maquetación
+            horariosOcupados.value = horariosFicticios;
         }
     } finally {
         loading.value = false;
@@ -772,7 +888,7 @@ const guardarJornadas = async () => {
                         equipo2Id: partido.equipo2Id,
                         hora: partido.hora,
                         canchaId: partido.canchaId,
-                        ubicacion: partido.ubicacion || "",
+                        ubicacion: "",
                         estado: "PROGRAMADO",
                         marcador1: 0,
                         marcador2: 0,
