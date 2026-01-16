@@ -7,6 +7,9 @@ import { useTemplateUI } from "@/store/templateUI";
 import { RolJuego, RolJuegonRequestParams } from "@/interfaces/RolJuego";
 import { Torneo } from "@/interfaces/Torneo";
 import { Categoria } from "@/interfaces/Categoria";
+import { Jornada, JornadaRequest, Partido, PartidoRequest } from "@/interfaces/Jornada";
+import { Cancha } from "@/interfaces/Cancha";
+import { Equipo } from "@/interfaces/Equipo";
 
 /**
  * A composable function that provides rolJuego service methods.
@@ -246,6 +249,192 @@ export const useRolJuegoService = () => {
         }
     };
 
+    /**
+     * Creates a new jornada.
+     * @param jornadaData - The jornada data to be created.
+     * @returns The created jornada with ID.
+     */
+    const createJornada = async (jornadaData: JornadaRequest): Promise<Jornada | null> => {
+        try {
+            const response = await axios.post(
+                `${URLS.COTBUILDER}/api/Jornada`,
+                jornadaData
+            );
+
+            if (response.status === 200) {
+                handleShowSnackbar({
+                    text: `Jornada creada correctamente`,
+                    type: "success",
+                    valueModel: true,
+                });
+                return response.data;
+            }
+            return null;
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Error al crear jornada`,
+                type: "error",
+                valueModel: true,
+            });
+            return null;
+        }
+    };
+
+    /**
+     * Creates a new partido.
+     * @param partidoData - The partido data to be created.
+     * @returns The created partido with ID.
+     */
+    const createPartido = async (partidoData: PartidoRequest): Promise<Partido | null> => {
+        try {
+            const response = await axios.post(
+                `${URLS.COTBUILDER}/api/Partido`,
+                partidoData
+            );
+
+            if (response.status === 200) {
+                return response.data;
+            }
+            return null;
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Error al crear partido`,
+                type: "error",
+                valueModel: true,
+            });
+            return null;
+        }
+    };
+
+    /**
+     * Gets teams assigned to a tournament filtered by rama and categoria.
+     * @param params - Query parameters.
+     * @returns Array of teams.
+     */
+    const getEquiposByRolJuego = async (params: {
+        TorneoId: number;
+        RamaId?: number;
+        CategoriaId?: number;
+    }): Promise<Equipo[]> => {
+        try {
+            const { data } = await axios.get<{
+                data: any[];
+                totalCount: number;
+            }>(
+                `${URLS.COTBUILDER}/api/Equipo/Torneo/EquiposAsignados`,
+                { params: { ...params, SortColumn: "nombre", Offset: 0, Next_Rows: 100, SortDirection: "ASC" } }
+            );
+
+            // Filter by rama and categoria if provided
+            let equipos = data.data.map((item) => ({
+                torneoId: item.torneoId ?? null,
+                torneo: item.torneo ?? "",
+                equipoId: item.equipoId,
+                entrenador: item.entrenador ?? "",
+                nombre: item.nombre ?? "",
+                descripcion: item.descripcion ?? "",
+                pais: item.pais ?? "",
+                estado: item.estado ?? "",
+                poblacion: item.poblacion ?? "",
+                colonia: item.colonia ?? "",
+                logo: item.logo ?? "",
+                extensionImg: item.extensionImg ?? "",
+                esRamaVaronil: item.esRamaVaronil ?? false,
+                esRamaFemenil: item.esRamaFemenil ?? false,
+                esRamaMixto: item.esRamaMixto ?? false,
+                categorias: item.categorias ? JSON.parse(item.categorias).map((c: any) => c.CategoriaId) : null,
+                tipoDeporteId: item.tipoDeporteId ?? null,
+                empresaId: item.empresaId ?? null,
+            } as Equipo));
+
+            // Filter by rama
+            if (params.RamaId) {
+                equipos = equipos.filter((eq) => {
+                    if (params.RamaId === 1) return eq.esRamaVaronil;
+                    if (params.RamaId === 2) return eq.esRamaFemenil;
+                    if (params.RamaId === 3) return eq.esRamaMixto;
+                    return true;
+                });
+            }
+
+            // Filter by categoria
+            if (params.CategoriaId) {
+                equipos = equipos.filter((eq) => {
+                    if (!eq.categorias) return false;
+                    return eq.categorias.includes(params.CategoriaId!);
+                });
+            }
+
+            return equipos;
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Error al obtener equipos`,
+                type: "error",
+                valueModel: true,
+            });
+            return [];
+        }
+    };
+
+    /**
+     * Gets all canchas (courts).
+     * @returns Array of canchas.
+     */
+    const getCanchas = async (): Promise<Cancha[]> => {
+        try {
+            const { data } = await axios.get<{
+                data: Cancha[];
+                totalCount: number;
+            }>(
+                `${URLS.COTBUILDER}/api/Cancha?SortColumn=canchaId&Offset=0&Next_Rows=100&SortDirection=ASC`
+            );
+            return data.data;
+        } catch (error) {
+            handleShowSnackbar({
+                text: `Error al obtener canchas`,
+                type: "error",
+                valueModel: true,
+            });
+            return [];
+        }
+    };
+
+    /**
+     * Gets partidos by fecha (date).
+     * @param fecha - The date to filter by.
+     * @param rolJuegoId - Optional rolJuegoId to filter.
+     * @returns Array of partidos with jornada info.
+     */
+    const getPartidosByFecha = async (
+        fecha: string,
+        rolJuegoId?: number
+    ): Promise<Partido[]> => {
+        try {
+            const params: any = {
+                Fecha: fecha,
+                SortColumn: "hora",
+                Offset: 0,
+                Next_Rows: 100,
+                SortDirection: "ASC",
+            };
+            if (rolJuegoId) {
+                params.RolJuegoId = rolJuegoId;
+            }
+
+            const { data } = await axios.get<{
+                data: Partido[];
+                totalCount: number;
+            }>(`${URLS.COTBUILDER}/api/Partido/ByFecha`, {
+                params,
+            });
+            return data.data || [];
+        } catch (error) {
+            // Si el endpoint no existe, retornar array vacío sin mostrar error
+            console.warn("Error al obtener partidos por fecha", error);
+            return [];
+        }
+    };
+
     return {
         createRolJuego,
         selectRolJuego,
@@ -255,5 +444,10 @@ export const useRolJuegoService = () => {
         selectTorneosForDropdown,
         selectCategoriasForDropdown,
         selectCategoriasByTorneo,
+        createJornada,
+        createPartido,
+        getEquiposByRolJuego,
+        getCanchas,
+        getPartidosByFecha,
     };
 };

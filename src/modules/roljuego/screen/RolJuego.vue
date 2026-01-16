@@ -77,6 +77,12 @@
                                     label: 'Editar Rol de Juego',
                                 },
                                 {
+                                    color: 'green',
+                                    handleAction: () => handleShowScheduleGames(item),
+                                    icon: 'mdi-calendar-clock',
+                                    label: 'Programar Juegos',
+                                },
+                                {
                                     color: 'red',
                                     handleAction: () =>
                                         handleShowDeleteDialog(item),
@@ -127,6 +133,14 @@
             <RolJuegoForm :close-modal="closeModal"></RolJuegoForm>
         </CBottomSheet>
         <!-- END CUSTOM -->
+        
+        <!-- Dialog para programar juegos - Full Screen -->
+        <v-dialog v-model="showScheduleDialog" fullscreen persistent>
+            <ProgramarJuegos 
+                :rol-juego="selectedRolJuego"
+                :close-modal="closeScheduleDialog"
+            />
+        </v-dialog>
         <CConfirmationDialog
             :title="dialogMessage.DELETE.title"
             :description="dialogMessage.DELETE.subtitle"
@@ -154,6 +168,7 @@
     </div>
 </template>
 <script setup lang="ts">
+import { ref } from "vue";
 //COT-UI-LIB
 import { CBottomSheet, CButton, CConfirmationDialog } from "@core/index";
 import { useRolJuego } from "../composables/useRolJuego";
@@ -166,6 +181,7 @@ import {
 
 //Form
 import RolJuegoForm from "../components/RolJuegoForm.vue";
+import ProgramarJuegos from "../components/ProgramarJuegos.vue";
 
 const {
     search,
@@ -189,4 +205,17 @@ const {
     loadingGrid,
     showFilterAction,
 } = useRolJuego();
+
+const showScheduleDialog = ref(false);
+const selectedRolJuego = ref<any>(null);
+
+const handleShowScheduleGames = (item: any) => {
+    selectedRolJuego.value = item;
+    showScheduleDialog.value = true;
+};
+
+const closeScheduleDialog = () => {
+    showScheduleDialog.value = false;
+    selectedRolJuego.value = null;
+};
 </script>
